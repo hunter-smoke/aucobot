@@ -1,0 +1,16 @@
+node_modules
+dist
+.next
+.turbo
+.env
+.env.*
+!.env.example
+*.log
+coverage
+.DS_Store
+
+# Chỉ dùng pnpm — không commit lockfile npm/yarn
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
+.pnp.*
