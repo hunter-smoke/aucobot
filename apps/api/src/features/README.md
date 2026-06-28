@@ -7,7 +7,8 @@ Plugin modules loaded via `ENABLED_FEATURES`. Core never imports feature interna
 | Folder | Purpose | Credential | Examples |
 |--------|---------|------------|----------|
 | `tools/` | App-native agent tools | DB / events only | `builtin` |
-| `integrations/` | External APIs | Platform API key | `web-search` (planned) |
+| `integrations/` | External APIs | Platform API key | `web-search` |
+| `ai-orchestration/` | LLM agent runtime | Together API key | `ai-orchestration` |
 | `channels/` | Social platforms | Per-user OAuth | `facebook`, `tiktok` |
 | `workflow/` | Jobs & business flows | Queue + DB | `publishing`, `approvals` |
 

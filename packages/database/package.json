@@ -22,11 +22,11 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@prisma/client": "^6.9.0"
+    "@prisma/client": "^6.19.3"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "prisma": "^6.9.0",
+    "prisma": "^6.19.3",
     "typescript": "^5.8.3"
   }
 }

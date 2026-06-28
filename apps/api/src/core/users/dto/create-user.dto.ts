@@ -1,16 +1,12 @@
-import { IsEmail, IsOptional, IsString, MaxLength } from "class-validator";
+import { createZodDto } from "nestjs-zod";
+import { z } from "zod";
 
-export class CreateUserDto {
-  @IsEmail()
-  email!: string;
+export const createUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().max(120).optional(),
+  timezone: z.string().max(64).optional(),
+});
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(120)
-  name?: string;
+export class CreateUserDto extends createZodDto(createUserSchema) {}
 
-  @IsOptional()
-  @IsString()
-  @MaxLength(64)
-  timezone?: string;
-}
+export type CreateUserInput = z.infer<typeof createUserSchema>;

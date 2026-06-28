@@ -1,9 +1,11 @@
 import { Controller, Get, Post, Body } from "@nestjs/common";
 import type { UserResponse } from "@aucobot/shared";
+import { Public } from "../common/decorators/public.decorator";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
 
 @Controller("users")
+@Public()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

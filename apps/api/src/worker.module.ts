@@ -14,7 +14,7 @@ export class WorkerModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.queueService.startProcessors();
+    await this.queueService.startWorkers();
     this.loggingService.log("Worker processors started", "WorkerBootstrap");
   }
 }

@@ -5,8 +5,9 @@ export const publishingPlugin: FeaturePlugin = {
   id: "publishing",
   registerModule: () => PublishingModule,
   registerWorkerProcessors: (queueService) => {
-    queueService.registerProcessor("publish-post", async () => {
-      // BullMQ processor sẽ implement ở bước tiếp theo
+    queueService.registerProcessor("publish-post", async (job) => {
+      void job.data;
+      // BullMQ processor stub — implement publish flow next
     });
   },
 };
