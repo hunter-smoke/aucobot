@@ -23,9 +23,8 @@ export function setupSwagger(
       [
         "AI Agent Cloud MVP — Auth API.",
         "",
-        "**Auth:** JWT trong httpOnly cookie `access_token`.",
-        "Đăng nhập qua `POST /auth/login` hoặc `POST /auth/register` — cookie được set tự động.",
-        "Các route protected cần cookie (Swagger UI: bật *Try it out* với credentials).",
+        "**Auth:** Access JWT cookie `access_token` (15m) + refresh `refresh_token` (30d, path `/api/auth`).",
+        "Client: proactive refresh (< 2m left) + 401 fallback; `GET /auth/session` for expiry sync.",
       ].join("\n"),
     )
     .setVersion("0.1.0")

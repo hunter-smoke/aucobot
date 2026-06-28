@@ -5,7 +5,7 @@ import { Strategy, type Profile } from "passport-google-oauth20";
 
 import { API_DEFAULT_PORT } from "@aucobot/shared";
 
-import { AuthService, type AuthUser } from "../auth.service";
+import { AuthService, type AuthUser } from "../service/auth.service";
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, "google") {

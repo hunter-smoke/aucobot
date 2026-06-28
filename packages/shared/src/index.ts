@@ -15,3 +15,13 @@ export interface UserResponse {
   timezone: string;
   createdAt: string;
 }
+
+/** JWT access token expiry (ISO). Null when no valid access cookie. */
+export interface AuthSessionMeta {
+  accessExpiresAt: string | null;
+}
+
+export interface AuthSuccessResponse {
+  user: UserResponse;
+  accessExpiresAt: string;
+}

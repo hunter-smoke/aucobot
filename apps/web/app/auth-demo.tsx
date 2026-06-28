@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { UserResponse } from "@aucobot/shared";
-import { API_DEFAULT_PORT } from "@aucobot/shared";
+import type { AuthSuccessResponse, UserResponse } from "@aucobot/shared";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? `http://localhost:${API_DEFAULT_PORT}`;
+import { API_URL, clearAuthSession, fetchWithAuth, setAuthSession } from "./fetch-with-auth";
 
 type AuthState =
   | { status: "loading" }
@@ -22,9 +21,7 @@ export function AuthDemo() {
 
   const loadMe = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: "include",
-      });
+      const res = await fetchWithAuth(`${API_URL}/api/auth/me`);
 
       if (res.status === 401) {
         setAuth({ status: "anonymous" });
@@ -64,7 +61,9 @@ export function AuthDemo() {
         body: JSON.stringify(body),
       });
 
-      const data = (await res.json()) as { user?: UserResponse; message?: string | string[] };
+      const data = (await res.json()) as AuthSuccessResponse & {
+        message?: string | string[];
+      };
 
       if (!res.ok) {
         const message = Array.isArray(data.message)
@@ -72,6 +71,10 @@ export function AuthDemo() {
           : (data.message ?? "Request failed");
         setError(message);
         return;
+      }
+
+      if (data.accessExpiresAt) {
+        setAuthSession(data.accessExpiresAt);
       }
 
       if (data.user) {
@@ -95,6 +98,7 @@ export function AuthDemo() {
         method: "POST",
         credentials: "include",
       });
+      clearAuthSession();
       setAuth({ status: "anonymous" });
     } catch {
       setError("Không kết nối được API");

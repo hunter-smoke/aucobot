@@ -32,7 +32,8 @@
 ```json
 {
   "lint": "eslint \"src/**/*.ts\" --fix",
-  "lint:ci": "eslint \"src/**/*.ts\" --max-warnings 0"
+  "lint:ci": "eslint \"src/**/*.ts\" --max-warnings 0",
+  "test": "jest"
 }
 ```
 
@@ -40,8 +41,36 @@ Verify local trước khi xong task:
 
 ```bash
 pnpm --filter @aucobot/api lint:ci
+pnpm --filter @aucobot/api test
 pnpm --filter @aucobot/api build
 ```
+
+---
+
+## Cấu trúc service (`service/`)
+
+Mọi **domain service** (`@Injectable` business logic) đặt trong thư mục **`service/`** của module:
+
+```
+core/auth/
+  auth.controller.ts
+  auth.module.ts
+  dto/
+  guards/
+  strategies/
+  service/
+    auth.service.ts
+    auth.service.test.ts   # hoặc *.spec.ts
+```
+
+| Quy tắc | Ghi chú |
+|---------|---------|
+| Tên file | `{domain}.service.ts` — không để `*.service.ts` ngang hàng controller |
+| Import | `from "./service/auth.service"` (trong module) |
+| Exception | `PrismaService`, `LoggingService` — infra, giữ `database/` / `logging/` |
+| Test | Cùng folder `service/` — `*.test.ts` hoặc `*.spec.ts`; mock Prisma/JWT, không hit DB thật |
+
+Khi thêm module mới (vd `users/`): `users/service/users.service.ts`.
 
 ---
 
@@ -156,8 +185,8 @@ Khi thêm rule mới: bắt đầu `warn`, chuyển `error` khi `lint:ci` sạch
 
 ## TypeScript cho typed lint
 
-`tsconfig.json` **include** `src/**/*.ts` và `**/*.spec.ts`.  
-Build production: `tsconfig.build.json` exclude `**/*spec.ts`.
+`tsconfig.json` **include** `src/**/*.ts`, `**/*.spec.ts`, `**/*.test.ts`.  
+Build production: `tsconfig.build.json` exclude `**/*spec.ts`, `**/*.test.ts`.
 
 ---
 

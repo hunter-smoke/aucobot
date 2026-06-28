@@ -234,7 +234,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/*.spec.ts"],
+    files: ["**/*.spec.ts", "**/*.test.ts"],
     rules: {
       "no-console": "off",
     },
