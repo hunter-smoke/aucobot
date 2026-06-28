@@ -8,133 +8,15 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  timezone  String   @default("Asia/Ho_Chi_Minh")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  socialAccounts SocialAccount[]
-  documents      Document[]
-  scheduledPosts ScheduledPost[]
-  agentLearnings AgentLearning[]
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  googleId     String?  @unique @map("google_id")
+  avatarUrl    String?  @map("avatar_url")
+  name         String?
+  timezone     String   @default("Asia/Ho_Chi_Minh")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("users")
-}
-
-enum SocialPlatform {
-  FACEBOOK
-  TIKTOK
-}
-
-enum SocialAccountStatus {
-  ACTIVE
-  NEEDS_RECONNECT
-  REVOKED
-}
-
-model SocialAccount {
-  id           String              @id @default(cuid())
-  userId       String              @map("user_id")
-  platform     SocialPlatform
-  externalId   String              @map("external_id")
-  displayName  String?             @map("display_name")
-  accessToken  String              @map("access_token")
-  refreshToken String?             @map("refresh_token")
-  expiresAt    DateTime?           @map("expires_at")
-  scopes       String[]            @default([])
-  status       SocialAccountStatus @default(ACTIVE)
-  createdAt    DateTime            @default(now()) @map("created_at")
-  updatedAt    DateTime            @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, platform, externalId])
-  @@index([userId])
-  @@map("social_accounts")
-}
-
-enum DocumentStatus {
-  PROCESSING
-  READY
-  FAILED
-}
-
-model Document {
-  id           String         @id @default(cuid())
-  userId       String         @map("user_id")
-  filename     String
-  mimeType     String         @map("mime_type")
-  sizeBytes    Int            @map("size_bytes")
-  storageUrl   String?        @map("storage_url")
-  extractedText String?       @map("extracted_text") @db.Text
-  status       DocumentStatus @default(PROCESSING)
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scheduledPosts ScheduledPost[]
-
-  @@index([userId])
-  @@map("documents")
-}
-
-enum ScheduledPostStatus {
-  DRAFT
-  SCHEDULED
-  PUBLISHING
-  PUBLISHED
-  FAILED
-}
-
-model ScheduledPost {
-  id              String              @id @default(cuid())
-  userId          String              @map("user_id")
-  documentId      String?             @map("document_id")
-  caption         String              @db.Text
-  platforms       SocialPlatform[]
-  runAt           DateTime            @map("run_at")
-  timezone        String              @default("Asia/Ho_Chi_Minh")
-  status          ScheduledPostStatus @default(DRAFT)
-  idempotencyKey  String              @unique @map("idempotency_key")
-  errorMessage    String?             @map("error_message") @db.Text
-  createdAt       DateTime            @default(now()) @map("created_at")
-  updatedAt       DateTime            @updatedAt @map("updated_at")
-
-  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  document Document?   @relation(fields: [documentId], references: [id], onDelete: SetNull)
-  results  PostResult[]
-
-  @@index([userId, status])
-  @@index([runAt, status])
-  @@map("scheduled_posts")
-}
-
-model PostResult {
-  id              String         @id @default(cuid())
-  scheduledPostId String         @map("scheduled_post_id")
-  platform        SocialPlatform
-  externalPostId  String?        @map("external_post_id")
-  publishedAt     DateTime?      @map("published_at")
-  rawResponse     Json?          @map("raw_response")
-  createdAt       DateTime       @default(now()) @map("created_at")
-
-  scheduledPost ScheduledPost @relation(fields: [scheduledPostId], references: [id], onDelete: Cascade)
-
-  @@unique([scheduledPostId, platform])
-  @@map("post_results")
-}
-
-model AgentLearning {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  category  String
-  insight   Json
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, category])
-  @@map("agent_learnings")
 }

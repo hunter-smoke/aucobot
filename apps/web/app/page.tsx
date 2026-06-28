@@ -1,6 +1,9 @@
-import type { HealthResponse, UserResponse } from "@aucobot/shared";
+import type { HealthResponse } from "@aucobot/shared";
+import { API_DEFAULT_PORT } from "@aucobot/shared";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { AuthDemo } from "./auth-demo";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? `http://localhost:${API_DEFAULT_PORT}`;
 
 async function getHealth(): Promise<HealthResponse | null> {
   try {
@@ -12,19 +15,6 @@ async function getHealth(): Promise<HealthResponse | null> {
     return res.json();
   } catch {
     return null;
-  }
-}
-
-async function getUsers(): Promise<UserResponse[]> {
-  try {
-    const res = await fetch(`${API_URL}/api/users`, {
-      cache: "no-store",
-    });
-
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
   }
 }
 
@@ -49,7 +39,7 @@ function StatusBadge({
 }
 
 export default async function HomePage() {
-  const [health, users] = await Promise.all([getHealth(), getUsers()]);
+  const health = await getHealth();
 
   return (
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-8 px-6 py-16">
@@ -65,6 +55,8 @@ export default async function HomePage() {
           backend để xác nhận stack đã chạy.
         </p>
       </header>
+
+      <AuthDemo />
 
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="mb-4 flex items-center justify-between gap-4">
@@ -93,39 +85,6 @@ export default async function HomePage() {
             </dd>
           </div>
         </dl>
-      </section>
-
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-medium">Users</h2>
-          <span className="text-sm text-[var(--muted)]">{users.length} records</span>
-        </div>
-
-        {users.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">
-            Chưa có user. Tạo thử bằng lệnh:
-          </p>
-        ) : (
-          <ul className="divide-y divide-[var(--border)]">
-            {users.map((user) => (
-              <li key={user.id} className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-medium">{user.name ?? user.email}</p>
-                  <p className="text-sm text-[var(--muted)]">{user.email}</p>
-                </div>
-                <p className="font-mono text-xs text-[var(--muted)]">
-                  {user.timezone}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <pre className="mt-4 overflow-x-auto rounded-xl bg-black/30 p-4 text-xs text-[var(--muted)]">
-{`curl -X POST ${API_URL}/api/users \\
-  -H "Content-Type: application/json" \\
-  -d '{"email":"demo@aucobot.vn","name":"Demo User"}'`}
-        </pre>
       </section>
     </main>
   );

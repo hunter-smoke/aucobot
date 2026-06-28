@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev --port 3000",
-    "start": "next start --port 3000",
+    "dev": "next dev --port 8386",
+    "start": "next start --port 8386",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""

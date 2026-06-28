@@ -4,14 +4,15 @@ function readEnv(): EnvConfig {
   return envSchema.parse({
     NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
-    REDIS_URL: process.env.REDIS_URL,
     API_PORT: process.env.API_PORT,
     WEB_ORIGIN: process.env.WEB_ORIGIN,
-    ENABLED_FEATURES: process.env.ENABLED_FEATURES,
     JWT_SECRET: process.env.JWT_SECRET,
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
-    TOGETHER_API_KEY: process.env.TOGETHER_API_KEY,
-    TAVILY_API_KEY: process.env.TAVILY_API_KEY,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+    AUTH_COOKIE_MAX_AGE_MS: process.env.AUTH_COOKIE_MAX_AGE_MS,
+    SWAGGER_ENABLED: process.env.SWAGGER_ENABLED,
   });
 }
 
@@ -21,14 +22,15 @@ export const appConfig = () => {
   return {
     nodeEnv: env.NODE_ENV,
     databaseUrl: env.DATABASE_URL,
-    redisUrl: env.REDIS_URL,
     apiPort: env.API_PORT,
     webOrigin: env.WEB_ORIGIN,
-    enabledFeatures: env.ENABLED_FEATURES,
     jwtSecret: env.JWT_SECRET,
     jwtExpiresIn: env.JWT_EXPIRES_IN,
-    togetherApiKey: env.TOGETHER_API_KEY,
-    tavilyApiKey: env.TAVILY_API_KEY,
+    googleClientId: env.GOOGLE_CLIENT_ID,
+    googleClientSecret: env.GOOGLE_CLIENT_SECRET,
+    googleCallbackUrl: env.GOOGLE_CALLBACK_URL,
+    authCookieMaxAgeMs: env.AUTH_COOKIE_MAX_AGE_MS,
+    swaggerEnabled: env.NODE_ENV === "production" ? env.SWAGGER_ENABLED : true,
   };
 };
 

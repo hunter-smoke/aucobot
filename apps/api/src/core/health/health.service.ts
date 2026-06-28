@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import type { HealthResponse } from "@aucobot/shared";
+
 import { PrismaService } from "../database/prisma.service";
+
+import type { HealthResponse } from "@aucobot/shared";
 
 @Injectable()
 export class HealthService {

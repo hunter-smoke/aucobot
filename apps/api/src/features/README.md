@@ -1,24 +1,15 @@
 # Features
 
-Plugin modules loaded via `ENABLED_FEATURES`. Core never imports feature internals directly.
+Thư mục plugin theo domain — **chưa implement code**, chỉ giữ layout đã thống nhất.
 
-## Layout
+| Thư mục | Vai trò |
+|---------|---------|
+| `tools/` | MCP tools thuần app |
+| `integrations/` | API key platform (Tavily, …) |
+| `channels/` | OAuth social (Facebook, TikTok, …) |
+| `workflow/` | Queue / jobs (publish, approvals, …) |
+| `ai-orchestration/` | LLM / agent chat |
 
-| Folder | Purpose | Credential | Examples |
-|--------|---------|------------|----------|
-| `tools/` | App-native agent tools | DB / events only | `builtin` |
-| `integrations/` | External APIs | Platform API key | `web-search` |
-| `ai-orchestration/` | LLM agent runtime | Together API key | `ai-orchestration` |
-| `channels/` | Social platforms | Per-user OAuth | `facebook`, `tiktok` |
-| `workflow/` | Jobs & business flows | Queue + DB | `publishing`, `approvals` |
+**MVP hiện tại:** API chỉ có `core/auth` + `core/health`. Thêm plugin khi được yêu cầu — đăng ký qua `core/plugins` (planned).
 
-## Adding a feature
-
-- Generic agent tool (no external API) → `tools/<name>/`
-- SaaS API (Tavily, Firecrawl, …) → `integrations/<name>/`
-- Social network → `channels/<name>/`
-- Schedule / approve / pipeline → `workflow/<name>/`
-
-## Plugin manifest
-
-All plugins are registered in `index.ts`. Plugin `id` matches `ENABLED_FEATURES` (folder path is for organization only).
+Xem `aucobot-architecture.md`.

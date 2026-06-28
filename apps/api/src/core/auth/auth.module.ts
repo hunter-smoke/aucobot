@@ -1,12 +1,15 @@
 import { Module } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
-import { ConfigService } from "@nestjs/config";
+
 import { DatabaseModule } from "../database/database.module";
+
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { GoogleStrategy } from "./strategies/google.strategy";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
@@ -21,7 +24,10 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
           "dev-jwt-secret-change-me-in-production",
         ),
         signOptions: {
-          expiresIn: configService.get<string>("jwtExpiresIn", "7d") as `${number}${"s" | "m" | "h" | "d"}`,
+          expiresIn: configService.get<string>(
+            "jwtExpiresIn",
+            "7d",
+          ) as `${number}${"s" | "m" | "h" | "d"}`,
         },
       }),
     }),
@@ -30,6 +36,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

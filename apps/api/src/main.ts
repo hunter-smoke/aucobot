@@ -1,12 +1,15 @@
 import "reflect-metadata";
-import cookieParser from "cookie-parser";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { API_DEFAULT_PORT } from "@aucobot/shared";
+import cookieParser from "cookie-parser";
 import { ZodValidationPipe } from "nestjs-zod";
+
+import { API_DEFAULT_PORT, WEB_DEFAULT_PORT } from "@aucobot/shared";
+
 import { AppModule } from "./app.module";
 import { LoggingService } from "./core/logging/logging.service";
+import { setupSwagger, SWAGGER_PATH } from "./core/swagger/setup-swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -19,7 +22,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: process.env.WEB_ORIGIN ?? "http://localhost:3000",
+    origin: process.env.WEB_ORIGIN ?? `http://localhost:${WEB_DEFAULT_PORT}`,
     credentials: true,
   });
 
@@ -29,9 +32,19 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   const port = config.get<number>("apiPort", API_DEFAULT_PORT);
+  const swaggerEnabled = config.get<boolean>("swaggerEnabled", true);
+
+  setupSwagger(app, { enabled: swaggerEnabled });
 
   await app.listen(port);
   loggingService.log(`API running on http://localhost:${port}/api`, "Bootstrap");
+
+  if (swaggerEnabled) {
+    loggingService.log(
+      `Swagger UI at http://localhost:${port}/${SWAGGER_PATH}`,
+      "Bootstrap",
+    );
+  }
 }
 
 void bootstrap();
