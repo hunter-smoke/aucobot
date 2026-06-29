@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 
-import { ApiPublic } from "../swagger/decorators/api-public.decorator";
+import { Public } from "../common/decorators/public.decorator";
 
 import { HealthService } from "./health.service";
 
@@ -12,7 +12,7 @@ import type { HealthResponse } from "@aucobot/shared";
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
-  @ApiPublic()
+  @Public()
   @Get()
   @ApiOperation({ summary: "API and database health check" })
   @ApiOkResponse({ description: "Service status" })

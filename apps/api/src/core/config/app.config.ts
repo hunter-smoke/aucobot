@@ -15,6 +15,10 @@ function readEnv(): EnvConfig {
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
     SWAGGER_ENABLED: process.env.SWAGGER_ENABLED,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    EMAIL_FROM: process.env.EMAIL_FROM,
+    EMAIL_VERIFICATION_EXPIRES_HOURS: process.env.EMAIL_VERIFICATION_EXPIRES_HOURS,
+    UNVERIFIED_USER_TTL_HOURS: process.env.UNVERIFIED_USER_TTL_HOURS,
   });
 }
 
@@ -35,6 +39,10 @@ export const appConfig = () => {
     googleClientSecret: env.GOOGLE_CLIENT_SECRET,
     googleCallbackUrl: env.GOOGLE_CALLBACK_URL,
     swaggerEnabled: env.NODE_ENV === "production" ? env.SWAGGER_ENABLED : true,
+    resendApiKey: env.RESEND_API_KEY,
+    emailFrom: env.EMAIL_FROM,
+    emailVerificationExpiresHours: env.EMAIL_VERIFICATION_EXPIRES_HOURS,
+    unverifiedUserTtlHours: env.UNVERIFIED_USER_TTL_HOURS,
   };
 };
 

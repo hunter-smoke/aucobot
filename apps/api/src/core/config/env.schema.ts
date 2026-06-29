@@ -21,6 +21,10 @@ export const envSchema = z.object({
     .url()
     .default("http://localhost:8387/api/auth/google/callback"),
   SWAGGER_ENABLED: z.coerce.boolean().default(true),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("Aucobot <noreply@send.aucobot.com>"),
+  EMAIL_VERIFICATION_EXPIRES_HOURS: z.coerce.number().int().positive().default(24),
+  UNVERIFIED_USER_TTL_HOURS: z.coerce.number().int().positive().default(72),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

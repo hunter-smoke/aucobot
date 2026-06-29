@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -9,10 +10,12 @@ import { Test } from "@nestjs/testing";
 import bcrypt from "bcrypt";
 
 import { PrismaService } from "../../database/prisma.service";
+import { EmailService } from "../../email/service/email.service";
 
 import { AuthService } from "./auth.service";
 
 import type { User } from "@aucobot/database";
+import type { RegisterResponse } from "@aucobot/shared";
 
 jest.mock("bcrypt", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),
@@ -27,6 +30,7 @@ const mockUser = (overrides: Partial<User> = {}): User => ({
   avatarUrl: null,
   name: "Demo",
   timezone: "Asia/Ho_Chi_Minh",
+  emailVerifiedAt: new Date("2025-06-28T00:00:00.000Z"),
   createdAt: new Date("2025-06-28T00:00:00.000Z"),
   updatedAt: new Date("2025-06-28T00:00:00.000Z"),
   ...overrides,
@@ -40,12 +44,19 @@ describe("AuthService", () => {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      deleteMany: jest.fn(),
     },
     refreshToken: {
       create: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
+    },
+    emailVerificationToken: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      deleteMany: jest.fn(),
     },
   };
 
@@ -62,6 +73,21 @@ describe("AuthService", () => {
 
       return defaultValue;
     }),
+    getOrThrow: jest.fn((key: string) => {
+      const values: Record<string, unknown> = {
+        webOrigin: "http://localhost:8386",
+        emailVerificationExpiresHours: 24,
+        unverifiedUserTtlHours: 72,
+        authAccessCookieMaxAgeMs: 900_000,
+        refreshTokenExpiresInDays: 30,
+      };
+
+      return values[key];
+    }),
+  };
+
+  const emailService = {
+    sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -73,15 +99,19 @@ describe("AuthService", () => {
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
     authService = moduleRef.get(AuthService);
     prisma.refreshToken.create.mockResolvedValue({ id: "rt-1" });
+    prisma.user.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.emailVerificationToken.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.emailVerificationToken.create.mockResolvedValue({ id: "evt-1" });
   });
 
   describe("register", () => {
-    it("throws ConflictException when email already exists", async () => {
+    it("throws ConflictException when email already verified", async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser());
 
       await expect(
@@ -92,27 +122,23 @@ describe("AuthService", () => {
       ).rejects.toThrow(ConflictException);
     });
 
-    it("creates user, refresh token, and returns token pair", async () => {
-      const user = mockUser();
+    it("creates user, sends verification email, and does not issue tokens", async () => {
+      const user = mockUser({ emailVerifiedAt: null });
       prisma.user.findUnique.mockResolvedValue(null);
       prisma.user.create.mockResolvedValue(user);
 
-      const result = await authService.register({
+      const result: RegisterResponse = await authService.register({
         email: user.email,
         password: "password123",
         name: user.name ?? undefined,
       });
 
       expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
-      expect(prisma.refreshToken.create).toHaveBeenCalled();
-      expect(jwtService.signAsync).toHaveBeenCalledWith({
-        sub: user.id,
-        email: user.email,
-      });
-      expect(result.accessToken).toBe("jwt-token");
-      expect(result.refreshToken).toEqual(expect.any(String));
-      expect(result.accessExpiresAt).toBe(new Date(1_900_000_000 * 1000).toISOString());
-      expect(result.user.email).toBe(user.email);
+      expect(prisma.emailVerificationToken.create).toHaveBeenCalled();
+      expect(emailService.sendVerificationEmail).toHaveBeenCalled();
+      expect(jwtService.signAsync).not.toHaveBeenCalled();
+      expect(result.email).toBe(user.email);
+      expect(result.message).toContain("Check your email");
     });
   });
 
@@ -123,6 +149,15 @@ describe("AuthService", () => {
       await expect(
         authService.loginWithPassword("demo@aucobot.vn", "password123"),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it("throws when email is not verified", async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser({ emailVerifiedAt: null }));
+      jest.mocked(bcrypt.compare).mockResolvedValue(true as never);
+
+      await expect(
+        authService.loginWithPassword("demo@aucobot.vn", "password123"),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it("throws when password is invalid", async () => {
@@ -147,9 +182,66 @@ describe("AuthService", () => {
     });
   });
 
+  describe("verifyEmail", () => {
+    it("throws when token is invalid", async () => {
+      prisma.emailVerificationToken.findUnique.mockResolvedValue(null);
+
+      await expect(authService.verifyEmail("bad-token")).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it("verifies user and returns token pair", async () => {
+      const user = mockUser({ emailVerifiedAt: null });
+      const stored = {
+        id: "evt-1",
+        userId: user.id,
+        tokenHash: "hash",
+        expiresAt: new Date(Date.now() + 86_400_000),
+        usedAt: null,
+        createdAt: new Date(),
+        user,
+      };
+
+      prisma.emailVerificationToken.findUnique.mockResolvedValue(stored);
+      prisma.user.update.mockResolvedValue(mockUser());
+      prisma.emailVerificationToken.update.mockResolvedValue({
+        ...stored,
+        usedAt: new Date(),
+      });
+
+      const result = await authService.verifyEmail("valid-plain-token");
+
+      expect(prisma.user.update).toHaveBeenCalled();
+      expect(result.accessToken).toBe("jwt-token");
+      expect(result.refreshToken).toEqual(expect.any(String));
+    });
+  });
+
+  describe("resendVerificationEmail", () => {
+    it("returns ok without sending when user is verified", async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser());
+
+      const result = await authService.resendVerificationEmail("demo@aucobot.vn");
+
+      expect(result).toEqual({ ok: true });
+      expect(emailService.sendVerificationEmail).not.toHaveBeenCalled();
+    });
+
+    it("sends email for unverified password user", async () => {
+      const user = mockUser({ emailVerifiedAt: null });
+      prisma.user.findUnique.mockResolvedValue(user);
+
+      const result = await authService.resendVerificationEmail(user.email);
+
+      expect(result).toEqual({ ok: true });
+      expect(emailService.sendVerificationEmail).toHaveBeenCalled();
+    });
+  });
+
   describe("validateGoogleProfile", () => {
     it("merges googleId when user exists by email", async () => {
-      const existing = mockUser({ googleId: null });
+      const existing = mockUser({ googleId: null, emailVerifiedAt: null });
       const merged = mockUser({ googleId: "google-123" });
 
       prisma.user.findUnique
@@ -166,13 +258,16 @@ describe("AuthService", () => {
       expect(prisma.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: existing.id },
-          data: expect.objectContaining({ googleId: "google-123" }) as object,
+          data: expect.objectContaining({
+            googleId: "google-123",
+            emailVerifiedAt: expect.any(Date) as Date,
+          }) as object,
         }),
       );
       expect(result.googleId).toBe("google-123");
     });
 
-    it("creates user when no match by googleId or email", async () => {
+    it("creates verified user when no match by googleId or email", async () => {
       const created = mockUser({ email: "new@aucobot.vn", googleId: "google-new" });
 
       prisma.user.findUnique.mockResolvedValue(null);
@@ -183,7 +278,13 @@ describe("AuthService", () => {
         email: "new@aucobot.vn",
       });
 
-      expect(prisma.user.create).toHaveBeenCalled();
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            emailVerifiedAt: expect.any(Date) as Date,
+          }) as object,
+        }),
+      );
       expect(result.email).toBe("new@aucobot.vn");
     });
   });
@@ -282,6 +383,7 @@ describe("AuthService", () => {
         name: user.name,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
+        emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
         createdAt: user.createdAt.toISOString(),
       });
     });

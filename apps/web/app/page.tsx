@@ -58,6 +58,13 @@ export default async function HomePage() {
 
       <AuthDemo />
 
+      <p className="text-center text-sm text-[var(--muted)]">
+        Email verification test:{" "}
+        <a href="/verify-email" className="text-[var(--accent)] underline">
+          /verify-email
+        </a>
+      </p>
+
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-lg font-medium">System health</h2>

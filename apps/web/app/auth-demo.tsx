@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { AuthSuccessResponse, UserResponse } from "@aucobot/shared";
+import type { AuthSuccessResponse, RegisterResponse, UserResponse } from "@aucobot/shared";
 
 import { API_URL, clearAuthSession, fetchWithAuth, setAuthSession } from "./fetch-with-auth";
 
 type AuthState =
   | { status: "loading" }
   | { status: "anonymous" }
+  | { status: "pendingVerification"; email: string }
   | { status: "authenticated"; user: UserResponse };
 
 export function AuthDemo() {
@@ -17,6 +18,7 @@ export function AuthDemo() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const loadMe = useCallback(async () => {
@@ -47,6 +49,7 @@ export function AuthDemo() {
   async function handleAuthAction(path: "register" | "login") {
     setBusy(true);
     setError(null);
+    setInfo(null);
 
     try {
       const body =
@@ -61,15 +64,22 @@ export function AuthDemo() {
         body: JSON.stringify(body),
       });
 
-      const data = (await res.json()) as AuthSuccessResponse & {
-        message?: string | string[];
-      };
+      const data = (await res.json()) as AuthSuccessResponse &
+        RegisterResponse & {
+          message?: string | string[];
+        };
 
       if (!res.ok) {
         const message = Array.isArray(data.message)
           ? data.message.join(", ")
           : (data.message ?? "Request failed");
         setError(message);
+        return;
+      }
+
+      if (path === "register") {
+        setAuth({ status: "pendingVerification", email: data.email ?? email });
+        setInfo(data.message ?? "Check your email to verify your account.");
         return;
       }
 
@@ -82,6 +92,40 @@ export function AuthDemo() {
       } else {
         await loadMe();
       }
+    } catch {
+      setError("Không kết nối được API");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    const targetEmail =
+      auth.status === "pendingVerification" ? auth.email : email.trim();
+
+    if (!targetEmail) {
+      setError("Enter your email first.");
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/resend-verification`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+
+      if (!res.ok) {
+        setError("Could not resend verification email.");
+        return;
+      }
+
+      setInfo("If an unverified account exists, a new verification email was sent.");
     } catch {
       setError("Không kết nối được API");
     } finally {
@@ -113,6 +157,8 @@ export function AuthDemo() {
         <h2 className="text-lg font-medium">Auth demo</h2>
         {auth.status === "loading" ? (
           <span className="text-sm text-[var(--muted)]">Đang tải…</span>
+        ) : auth.status === "pendingVerification" ? (
+          <span className="text-sm text-amber-300">Chờ xác minh email</span>
         ) : auth.status === "authenticated" ? (
           <span className="text-sm text-emerald-300">Đã đăng nhập</span>
         ) : (
@@ -141,7 +187,16 @@ export function AuthDemo() {
         </div>
       )}
 
-      {auth.status !== "authenticated" && (
+      {auth.status === "pendingVerification" && (
+        <div className="mb-6 rounded-xl bg-amber-500/10 p-4 text-sm">
+          <p className="font-medium text-amber-200">Verify your email</p>
+          <p className="mt-1 text-[var(--muted)]">
+            We sent a link to <span className="font-mono">{auth.email}</span>. Open it to sign in.
+          </p>
+        </div>
+      )}
+
+      {auth.status !== "authenticated" && auth.status !== "pendingVerification" && (
         <div className="mb-6 grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
             <span className="text-[var(--muted)]">Email</span>
@@ -176,6 +231,10 @@ export function AuthDemo() {
         </div>
       )}
 
+      {info && (
+        <p className="mb-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">{info}</p>
+      )}
+
       {error && (
         <p className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>
       )}
@@ -183,22 +242,36 @@ export function AuthDemo() {
       <div className="flex flex-wrap gap-3">
         {auth.status !== "authenticated" && (
           <>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void handleAuthAction("register")}
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              Đăng ký
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void handleAuthAction("login")}
-              className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              Đăng nhập
-            </button>
+            {auth.status !== "pendingVerification" && (
+              <>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void handleAuthAction("register")}
+                  className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  Đăng ký
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void handleAuthAction("login")}
+                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+                >
+                  Đăng nhập
+                </button>
+              </>
+            )}
+            {(auth.status === "pendingVerification" || auth.status === "anonymous") && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handleResendVerification()}
+                className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium disabled:opacity-50"
+              >
+                Resend verification email
+              </button>
+            )}
             <a
               href={`${API_URL}/api/auth/google`}
               className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium"

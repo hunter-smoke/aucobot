@@ -21,7 +21,7 @@ import {
 import { WEB_DEFAULT_PORT } from "@aucobot/shared";
 
 import { CurrentUser } from "../common/decorators/current-user.decorator";
-import { ApiPublic } from "../swagger/decorators/api-public.decorator";
+import { Public } from "../common/decorators/public.decorator";
 
 import {
   ACCESS_TOKEN_COOKIE,
@@ -33,6 +33,8 @@ import {
 } from "./auth-cookie.util";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
+import { ResendVerificationDto } from "./dto/resend-verification.dto";
+import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { AuthService, type AuthUser } from "./service/auth.service";
 
 import type { AuthenticatedUser } from "../common/decorators/current-user.decorator";
@@ -46,18 +48,41 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
-  @ApiPublic()
+  // --- Email/password registration & verification ---
+
+  @Public()
   @Post("register")
   @ApiOperation({ summary: "Register with email and password" })
-  @ApiOkResponse({ description: "Access + refresh cookies set" })
-  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const tokens = await this.authService.register(dto);
-    setAuthCookies(res, tokens, this.getCookieMaxAge());
-
-    return { user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
+  @ApiOkResponse({ description: "Verification email sent — no session until verified" })
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
-  @ApiPublic()
+  @Public()
+  @Post("verify-email")
+  @ApiOperation({ summary: "Verify email from link token and sign in" })
+  @ApiOkResponse({ description: "Access + refresh cookies set after verification" })
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.authService.verifyEmail(dto.token);
+    setAuthCookies(res, tokens, this.getCookieMaxAge());
+
+    return { ok: true, user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
+  }
+
+  @Public()
+  @Post("resend-verification")
+  @ApiOperation({ summary: "Resend verification email" })
+  @ApiOkResponse({ description: "Always returns ok to avoid email enumeration" })
+  resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerificationEmail(dto.email);
+  }
+
+  // --- Email/password session ---
+
+  @Public()
   @Post("login")
   @ApiOperation({ summary: "Login with email and password" })
   @ApiOkResponse({ description: "Access + refresh cookies set" })
@@ -68,7 +93,18 @@ export class AuthController {
     return { user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
   }
 
-  @ApiPublic()
+  @Public()
+  @Post("logout")
+  @ApiOperation({ summary: "Revoke refresh token and clear cookies" })
+  @ApiOkResponse({ description: "Cookies cleared" })
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    await this.authService.revokeRefreshToken(this.readRefreshToken(req));
+    clearAuthCookies(res);
+
+    return { ok: true };
+  }
+
+  @Public()
   @Post("refresh")
   @ApiOperation({ summary: "Rotate refresh token and issue new access token" })
   @ApiOkResponse({ description: "New access + refresh cookies set" })
@@ -85,7 +121,7 @@ export class AuthController {
     return { ok: true, user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
   }
 
-  @ApiPublic()
+  @Public()
   @Get("session")
   @ApiOperation({
     summary: "Access token expiry from cookie (for proactive client refresh)",
@@ -99,17 +135,6 @@ export class AuthController {
     };
   }
 
-  @ApiPublic()
-  @Post("logout")
-  @ApiOperation({ summary: "Revoke refresh token and clear cookies" })
-  @ApiOkResponse({ description: "Cookies cleared" })
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    await this.authService.revokeRefreshToken(this.readRefreshToken(req));
-    clearAuthCookies(res);
-
-    return { ok: true };
-  }
-
   @Get("me")
   @ApiCookieAuth("access_token")
   @ApiOperation({ summary: "Current authenticated user" })
@@ -118,7 +143,9 @@ export class AuthController {
     return this.authService.getMe(user.userId);
   }
 
-  @ApiPublic()
+  // --- Google OAuth ---
+
+  @Public()
   @Get("google")
   @UseGuards(AuthGuard("google"))
   @ApiOperation({ summary: "Redirect to Google OAuth consent" })
@@ -127,7 +154,7 @@ export class AuthController {
     // Passport redirects to Google.
   }
 
-  @ApiPublic()
+  @Public()
   @Get("google/callback")
   @UseGuards(AuthGuard("google"))
   @ApiOperation({ summary: "Google OAuth callback" })
@@ -151,13 +178,9 @@ export class AuthController {
 
   private getCookieMaxAge(): AuthCookieMaxAge {
     return {
-      accessMaxAgeMs: this.configService.get<number>(
-        "authAccessCookieMaxAgeMs",
-        900_000,
-      ),
-      refreshMaxAgeMs: this.configService.get<number>(
+      accessMaxAgeMs: this.configService.getOrThrow<number>("authAccessCookieMaxAgeMs"),
+      refreshMaxAgeMs: this.configService.getOrThrow<number>(
         "authRefreshCookieMaxAgeMs",
-        2_592_000_000,
       ),
     };
   }

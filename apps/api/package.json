@@ -12,7 +12,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
-    "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo','tsconfig.build.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\""
+    "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo','tsconfig.build.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\"",
+    "predev": "pnpm run clean"
   },
   "dependencies": {
     "@aucobot/database": "workspace:*",

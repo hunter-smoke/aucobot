@@ -74,6 +74,18 @@ Khi thêm module mới (vd `users/`): `users/service/users.service.ts`.
 
 ---
 
+## Config — một nguồn default
+
+| Quy tắc | Ghi chú |
+|---------|---------|
+| Default env | Chỉ khai báo **một lần** trong `core/config/env.schema.ts` (Zod `.default()`) |
+| Đọc config | `ConfigService.getOrThrow("camelCaseKey")` — **không** lặp lại default ở `auth.module`, strategy, service, … |
+| Map env → key | `app.config.ts` map `JWT_SECRET` → `jwtSecret`; consumer chỉ dùng camelCase key |
+
+**Cấm:** cùng một giá trị fallback (vd secret JWT, `15m`, max-age cookie) xuất hiện ở cả schema lẫn `configService.get(key, default)`.
+
+---
+
 ## Hai mức
 
 | Mức | CI | Ý nghĩa |

@@ -13,7 +13,13 @@ export interface UserResponse {
   name: string | null;
   avatarUrl: string | null;
   timezone: string;
+  emailVerifiedAt: string | null;
   createdAt: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  email: string;
 }
 
 /** JWT access token expiry (ISO). Null when no valid access cookie. */
