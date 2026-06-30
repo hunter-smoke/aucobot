@@ -41,6 +41,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
+      - name: Build workspace packages for ESLint
+        run: pnpm --filter @aucobot/shared --filter @aucobot/database build
+
       - name: Lint API
         run: pnpm --filter @aucobot/api lint:ci
 
