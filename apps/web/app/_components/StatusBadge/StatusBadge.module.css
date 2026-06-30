@@ -1,0 +1,20 @@
+.badge {
+  align-items: center;
+  border-radius: 9999px;
+  display: inline-flex;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  padding: var(--space-1) var(--space-3);
+}
+
+.badgeOk {
+  composes: badge;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+}
+
+.badgeError {
+  composes: badge;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}

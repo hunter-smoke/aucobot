@@ -53,7 +53,8 @@ Giai đoạn hiện tại tập trung **`apps/api`** — NestJS modules, Prisma 
 
 ```text
 Phase hiện tại:  API + Database + Redis/BullMQ + MCP core
-Phase sau:       Web UI (CSS Modules, components, Storybook)
+Phase song song:  Web scaffold (folder + rule) — frontend mỏng, stream-only
+Phase sau:        Implement UI chat (CSS Modules) khi API contract ổn định
 ```
 
 ### Mô hình sản phẩm: Phòng marketing ảo khép kín
@@ -188,8 +189,8 @@ API: `GET /api/departments/:id/approvals`, `POST /api/approvals/:id/approve`, `P
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  Vercel — apps/web (Next.js)                                     │
-│  • UI: connect social, chat agent, lên lịch, xem trạng thái     │
-│  • Chỉ gọi REST API — KHÔNG gọi worker trực tiếp                │
+│  • UI Telegram-style: thread list + chat stream (frontend mỏng) │
+│  • Chỉ gọi REST + WebSocket — KHÔNG gọi worker trực tiếp        │
 └───────────────────────────────┬─────────────────────────────────┘
                                 │ NEXT_PUBLIC_API_URL
                                 ▼
@@ -223,7 +224,7 @@ API: `GET /api/departments/:id/approvals`, `POST /api/approvals/:id/approve`, `P
 | Service            | Nơi chạy             | Bắt buộc       | Vai trò                            |
 | ------------------ | -------------------- | -------------- | ---------------------------------- |
 | **web**            | Vercel               | ✅             | Giao diện người dùng               |
-| **api**            | Railway              | ✅             | REST API, webhook, enqueue job     |
+| **api**            | Railway              | ✅             | REST + WebSocket, webhook, enqueue job |
 | **Worker**         | Gộp trong api        | ✅             | Consumer BullMQ — đăng bài hẹn giờ |
 | **PostgreSQL**     | Railway plugin       | ✅             | Dữ liệu persistent, multi-tenant   |
 | **Redis**          | Railway plugin       | ✅             | BullMQ queue                       |
@@ -245,10 +246,55 @@ API: `GET /api/departments/:id/approvals`, `POST /api/approvals/:id/approve`, `P
    • đọc post + social_accounts theo user_id
    • gọi Facebook/TikTok API
    • cập nhật status PUBLISHED | FAILED + post_results
-4. web poll GET /api/scheduled-posts/:id hoặc SSE (sau)
+4. web nhận event `job.status` qua WebSocket (cùng socket department)
 ```
 
-**Frontend không bao giờ gọi worker.** User → API → Queue → Worker.
+**Frontend không bao giờ gọi worker.** User → API (REST) → Queue → Worker → API push (WS).
+
+### Giao thức client web (đã chốt): REST + WebSocket
+
+**Không dùng GraphQL.** Một client chính (`apps/web`); contract Zod trong `@aucobot/shared`.
+
+| Kênh | Vai trò | Web layer |
+|------|---------|-----------|
+| **REST** | Lệnh user, CRUD, snapshot ban đầu | `lib/http` → `lib/api/*` |
+| **WebSocket** | Push realtime: stream agent, job, approval | `lib/stream/*` |
+
+```text
+User action (gửi tin, duyệt, setup)
+  → REST POST/GET /api/*
+  → API xử lý (NestJS + worker)
+
+Server push (chunk agent, job done, approval đổi)
+  → WSS /api/ws/departments/:departmentId
+  → JSON event envelope (Zod trong @aucobot/shared)
+  → web: lib/stream → hooks → stores → UI
+```
+
+**REST — ví dụ:**
+
+| Method | Path | Mục đích |
+|--------|------|----------|
+| POST | `/api/departments/:id/messages` | User gửi tin → API bắt đầu agent |
+| GET | `/api/departments/:id/messages` | History / snapshot (RSC + client) |
+| POST | `/api/approvals/:id/approve` | Duyệt bài |
+| POST | `/api/scheduled-posts` | Tạo lịch đăng |
+
+**WebSocket — một connection / department khi mở chat:**
+
+| Event `type` | Hướng | Mục đích |
+|--------------|-------|----------|
+| `message.chunk` | S→C | Stream từng mảnh câu trả lời agent |
+| `message.done` | S→C | Kết thúc tin |
+| `approval.updated` | S→C | Trạng thái duyệt đổi |
+| `job.status` | S→C | Job đăng bài: scheduled → published / failed |
+| `ping` / `pong` | C↔S | Keepalive |
+
+**Auth WS:** cookie `httpOnly` lúc HTTP Upgrade (cùng site `app.` / `api.`) — **cấm** secret trên query string.
+
+**API stack:** NestJS `@nestjs/websockets` + adapter `ws` (native). Scale sau: Redis pub/sub giữa replicas.
+
+**Poll REST** (`GET scheduled-posts/:id`) chỉ fallback dev — production dùng `job.status` trên WS.
 
 ### Xử lý đột biến nhiều user đăng cùng lúc
 
@@ -582,7 +628,7 @@ pnpm install
 aucobot/
 ├── apps/
 │   ├── api/                     # NestJS @aucobot/api — Core + Features (plugin)
-│   └── web/                     # Next.js App Router → deploy Vercel
+│   └── web/                     # Next.js — frontend mỏng (STRUCTURE.md)
 │
 ├── packages/
 │   ├── database/                # Prisma schema + client PostgreSQL
@@ -609,7 +655,7 @@ Backend NestJS — **`@aucobot/api`**. Gộp API + Worker trong một Railway se
 
 | Luồng      | Trách nhiệm                                            |
 | ---------- | ------------------------------------------------------ |
-| **API**    | REST/SSE, webhook, xử lý request từ `web`, enqueue job |
+| **API**    | REST + WebSocket, webhook, xử lý request từ `web`, enqueue job |
 | **Worker** | BullMQ consumer — thực thi job hẹn giờ đăng bài        |
 
 **Phụ thuộc nội bộ:** `@aucobot/database`, `@aucobot/shared`, `@aucobot/social-providers`, `@aucobot/mcp-core`, `@aucobot/llm-services`
@@ -661,7 +707,7 @@ apps/api/src/
 
 ### `apps/web`
 
-Frontend Next.js 16 (App Router) — deploy **Vercel**. **Tạm dừng phát triển** — ưu tiên hoàn thiện API trước.
+Frontend Next.js 16 (App Router) — deploy **Vercel**. **Frontend mỏng:** chỉ stream & hiển thị; não nghiệp vụ ở `apps/api`.
 
 **Phụ thuộc nội bộ:** `@aucobot/shared`
 
@@ -669,33 +715,71 @@ Frontend Next.js 16 (App Router) — deploy **Vercel**. **Tạm dừng phát tri
 
 **Quy ước UI:**
 
-| Quy ước                | Mô tả                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------- |
-| **CSS Modules**        | Mỗi component có file `ComponentName.module.css` — không dùng Tailwind / UI kit ngoài |
-| **Components tự viết** | Design system riêng trong `components/` — Button, Input, Modal, …                     |
-| **Storybook**          | Mỗi component có `.stories.tsx` — phát triển & document UI độc lập page               |
+| Quy ước | Mô tả |
+| -------- | ----- |
+| **Frontend mỏng** | Next.js + Zustand buffer stream; không logic agent/approval/job trên client |
+| **UX Telegram-style** | List thread (phòng marketing) \| chat full-bleed — không dashboard AI SaaS |
+| **CSS Modules** | `ComponentName.module.css` — không Tailwind / UI kit ngoài |
+| **Components tự viết** | `components/ui`, `layout`, `chat` |
+| **Storybook** | `.stories.tsx` cạnh component — defer đến khi có `components/ui` |
 
-**Cấu trúc thư mục (target):**
+**Sơ đồ folder (đã scaffold — xem `README.md` từng folder):**
 
-```
+> Chi tiết: [`apps/web/STRUCTURE.md`](apps/web/STRUCTURE.md) · rule: [`apps/web/.agent/rule.md`](apps/web/.agent/rule.md)
+
+```text
 apps/web/
-├── app/                       # Routes only — compose components
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── globals.css            # CSS variables, reset, typography base
-├── components/                # UI components tự viết
-│   ├── Button/
-│   │   ├── Button.tsx
-│   │   ├── Button.module.css
-│   │   ├── Button.stories.tsx
-│   │   └── index.ts
-│   └── …
-├── lib/                       # api client, hooks
-│   └── api.ts
-├── .storybook/                # Storybook config
-├── next.config.ts
-└── package.json
+├── STRUCTURE.md
+├── app/
+│   ├── (auth)/                    login, register
+│   ├── (main)/                    shell Telegram-style
+│   │   ├── page.tsx               thread list
+│   │   └── c/[departmentId]/      chat + ClientChatPage
+│   └── setup/                     wizard form → API
+├── components/
+│   ├── ui/                        Button, Input, Spinner…
+│   ├── layout/                    AppShell, SplitPane, Composer
+│   └── chat/                      MessageList, Bubble, StreamText
+├── hooks/<domain>/                pipe: lib → stores (chat, thread, approval)
+├── stores/<domain>/               Zustand stream buffer (message, thread, connection)
+├── lib/
+│   ├── http/                      client, server-api, api-base-url  [MVP]
+│   ├── api/                       REST mirror + Zod  [auth.ts MVP]
+│   └── stream/                    WebSocket agent-stream-client  [planned]
+├── utils/<domain>/                format hiển thị
+├── schemas/                       wrap @aucobot/shared
+├── public/
+├── scripts/
+├── proxy.ts                       auth guard (planned)
+└── next.config.ts
 ```
+
+**Luồng data web:**
+
+```text
+apps/api ──REST + WebSocket──► lib/http + lib/stream + lib/api
+                                    ▼
+                          hooks/<domain>  (pipe)
+                                    ▼
+                          stores/<domain>  (Zustand)
+                                    ▼
+                          components/chat + app/(main)
+```
+
+**Map `lib/api/` ↔ API domain (thêm file khi có endpoint):**
+
+| `lib/api/` | API |
+|------------|-----|
+| `auth.ts` ✅ | `/api/auth/*` |
+| `departments.ts` | `/api/departments` |
+| `agents.ts` | agents trong department |
+| `messages.ts` | chat REST (nếu có) |
+| `approvals.ts` | approval queue |
+| `scheduled-posts.ts` | lịch đăng; status qua WS `job.status` |
+
+**Giao thức:** REST (lệnh) + WebSocket (push) — không GraphQL. Xem [Giao thức client web](#giao-thức-client-web-đã-chốt-rest--websocket).
+
+**Trạng thái:** folder + `README.md` đã tạo; code MVP tạm (`app/page.tsx`, `lib/http`, `lib/api/auth`). UI chat chờ API contract.
 
 ## Tech Stack (đã chốt)
 
@@ -705,6 +789,7 @@ apps/web/
 | ------------------------------ | --------------------------------------------------------------------------------------------- |
 | **TypeScript everywhere**      | Apps + packages cùng ngôn ngữ                                                                 |
 | **Zod single source of truth** | Schema validation API, form client, AI structured output — định nghĩa trong `@aucobot/shared` |
+| **Không GraphQL**              | REST + WebSocket đủ cho một web client; Zod trong `@aucobot/shared` |
 | **Không LangChain**            | AI qua Vercel AI SDK — gọn, native TS                                                         |
 | **Không UI kit ngoài**         | Frontend tự viết components + CSS Modules                                                     |
 
@@ -712,7 +797,7 @@ apps/web/
 
 | Công nghệ             | Package / ghi chú                                                    | Vai trò                                              |
 | --------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
-| **NestJS 11**         | `@nestjs/core`, `@nestjs/platform-express`                           | HTTP API + worker host                               |
+| **NestJS 11**         | `@nestjs/core`, `@nestjs/platform-express`, `@nestjs/websockets`, `ws` | HTTP REST + WebSocket gateway |
 | **Prisma**            | `@aucobot/database`                                                  | PostgreSQL ORM, migrations                           |
 | **Zod**               | `nestjs-zod` hoặc custom pipe                                        | Validate request body/query — thay `class-validator` |
 | **BullMQ**            | `@nestjs/bullmq`, `bullmq`                                           | Queue delayed job, retry, concurrency                |
@@ -730,12 +815,23 @@ apps/web/
 **Auth flow (đã chốt):**
 
 ```text
-web → GET /api/auth/facebook (Passport)
-    → callback → lưu token encrypt vào DB
-    → Set-Cookie: session=<JWT>; HttpOnly; Secure; SameSite
-web → fetch(API, { credentials: 'include' })
-API → JwtStrategy đọc cookie → req.user.user_id
+Email (web /login + /register — 2 route, unified verify, Zustand):
+  POST /api/auth/email/send-code     → { email, purpose } — KHÔNG tạo user (purpose = email copy)
+  POST /api/auth/email/verify-code   → OTP đúng → create nếu mới / login nếu có → Set-Cookie
+  POST /api/auth/email/resend-code   → cooldown 60s
+
+Google (web):
+  GET /api/auth/google → callback → Set-Cookie
+
+Password (admin/dev only — ẩn web MVP):
+  POST /api/auth/login | register | verify-email (link legacy)
+
+Session:
+  web → fetch(API, { credentials: 'include' })
+  API → JwtStrategy đọc cookie → req.user.user_id
 ```
+
+Chi tiết OTP: [`apps/api/src/core/auth/README.md`](apps/api/src/core/auth/README.md) · Web: [`apps/web/app/(auth)/README.md`](apps/web/app/(auth)/README.md).
 
 **Cross-domain (Vercel + Railway):** dùng subdomain chung (`app.` / `api.`) + `Domain=.aucobot.vn` trên cookie.
 
@@ -750,7 +846,8 @@ API → JwtStrategy đọc cookie → req.user.user_id
 | **Storybook**                  | `@storybook/nextjs`         | Stories cho từng component — dev UI độc lập       |
 | **Zod**                        | import từ `@aucobot/shared` | Validate form                                     |
 | **react-hook-form**            | `@hookform/resolvers/zod`   | Form UX                                           |
-| **TanStack Query**             | `@tanstack/react-query`     | Fetch/cache API, poll job status                  |
+| **Zustand**                    | `stores/<domain>/`            | Buffer stream + projection server state — **không** business logic |
+| **TanStack Query**             | `@tanstack/react-query`       | Optional: cache REST snapshot; job status chủ yếu qua WS |
 | **Luxon** hoặc **date-fns-tz** | —                           | Timezone lịch đăng (`Asia/Ho_Chi_Minh`)           |
 
 **Quy ước component:**
@@ -942,11 +1039,14 @@ TIKTOK_CLIENT_SECRET=
 | PostgreSQL + Prisma schema (base)                   | ✅                              |
 | NestJS `apps/api` (health, users)                   | ✅                              |
 | Đổi tên `@aucobot/api`, cấu trúc core/features      | ✅ Đã chốt trong doc            |
-| Next.js 16 web (demo — tạm dừng, ưu tiên API)       | ⏸️                              |
+| Next.js 16 web — folder scaffold + rule (frontend mỏng) | ✅ Scaffold + MVP tạm |
+| Next.js 16 web — UI chat implement                     | 🔜 Sau API contract   |
 | Kiến trúc MVP deploy (Vercel + Railway)             | ✅ Đã chốt                      |
 | Key quảng cáo: **「Xây dựng Phòng Marketing Ảo Của Riêng Bạn」** | ✅ Đã chốt           |
 | MVP features spec (department, agents, MCP, approval) | ✅ Đã chốt                    |
 | API architecture: **core + features (plugin)**      | ✅ Đã chốt                    |
+| Giao thức client: **REST + WebSocket** (không GraphQL) | ✅ Đã chốt            |
+| **API: WebSocket gateway** (`/api/ws/departments/:id`) | 🔜                              |
 | Tech stack (Zod, BullMQ, Passport, AI SDK, MCP)     | ✅ Đã chốt                      |
 | **Scaffold `core/common` + `core/plugins` registry** | ✅                              |
 | Refactor `apps/api` → `core/` + `features/`          | ✅                              |
@@ -955,5 +1055,6 @@ TIKTOK_CLIENT_SECRET=
 | Redis + BullMQ worker                               | 🔜                              |
 | Auth Passport + JWT cookie                          | 🔜                              |
 | Approval queue + audit log                          | 🔜                              |
-| Frontend CSS Modules + components + Storybook       | 🔜 Sau API                      |
+| Frontend folder + `STRUCTURE.md` + ESLint Phase A    | ✅                              |
+| Frontend CSS Modules + `components/ui` + Storybook   | 🔜 Sau API                      |
 | Tách worker service riêng                           | ⏸️ Defer post-MVP               |

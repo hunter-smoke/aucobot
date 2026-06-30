@@ -33,7 +33,10 @@ import {
 } from "./auth-cookie.util";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
+import { ResendEmailCodeDto } from "./dto/resend-email-code.dto";
 import { ResendVerificationDto } from "./dto/resend-verification.dto";
+import { SendEmailCodeDto } from "./dto/send-email-code.dto";
+import { VerifyEmailCodeDto } from "./dto/verify-email-code.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { AuthService, type AuthUser } from "./service/auth.service";
 
@@ -78,6 +81,42 @@ export class AuthController {
   @ApiOkResponse({ description: "Always returns ok to avoid email enumeration" })
   resendVerification(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerificationEmail(dto.email);
+  }
+
+  // --- Email OTP (login / register) ---
+
+  @Public()
+  @Post("email/send-code")
+  @ApiOperation({ summary: "Send 6-digit OTP for login or register" })
+  @ApiOkResponse({ description: "Generic ok — does not create a user" })
+  sendEmailCode(@Body() dto: SendEmailCodeDto) {
+    return this.authService.sendEmailCode(dto.email, dto.purpose);
+  }
+
+  @Public()
+  @Post("email/verify-code")
+  @ApiOperation({ summary: "Verify OTP and sign in or register" })
+  @ApiOkResponse({ description: "Access + refresh cookies set on success" })
+  async verifyEmailCode(
+    @Body() dto: VerifyEmailCodeDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const tokens = await this.authService.verifyEmailCode(
+      dto.email,
+      dto.code,
+      dto.purpose,
+    );
+    setAuthCookies(res, tokens, this.getCookieMaxAge());
+
+    return { ok: true, user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
+  }
+
+  @Public()
+  @Post("email/resend-code")
+  @ApiOperation({ summary: "Resend OTP after cooldown" })
+  @ApiOkResponse({ description: "Generic ok" })
+  resendEmailCode(@Body() dto: ResendEmailCodeDto) {
+    return this.authService.resendEmailCode(dto.email, dto.purpose);
   }
 
   // --- Email/password session ---

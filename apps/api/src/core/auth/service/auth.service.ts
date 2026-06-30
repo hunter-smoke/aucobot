@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomInt } from "node:crypto";
 
 import {
   ConflictException,
@@ -16,7 +16,12 @@ import { EmailService } from "../../email/service/email.service";
 
 import type { RegisterInput } from "../dto/register.dto";
 import type { User } from "@aucobot/database";
-import type { RegisterResponse, UserResponse } from "@aucobot/shared";
+import type {
+  EmailOtpPurpose,
+  RegisterResponse,
+  SendEmailCodeResponse,
+  UserResponse,
+} from "@aucobot/shared";
 
 export type AuthUser = User;
 
@@ -40,6 +45,7 @@ export interface TokenPair {
 @Injectable()
 export class AuthService {
   private readonly resendCooldownByEmail = new Map<string, number>();
+  private readonly otpResendCooldownByKey = new Map<string, number>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -167,6 +173,123 @@ export class AuthService {
     await this.sendVerificationEmailForUser(user);
 
     return { ok: true };
+  }
+
+  async sendEmailCode(
+    email: string,
+    purpose: EmailOtpPurpose,
+  ): Promise<SendEmailCodeResponse> {
+    const normalizedEmail = this.normalizeEmail(email);
+    const cooldownKey = this.otpCooldownKey(normalizedEmail, purpose);
+    const cooldownMs = this.getOtpResendCooldownMs();
+    const lastSentAt = this.otpResendCooldownByKey.get(cooldownKey) ?? 0;
+
+    if (Date.now() - lastSentAt < cooldownMs) {
+      return {
+        ok: true,
+        expiresInSeconds: this.getOtpExpiresInSeconds(),
+      };
+    }
+
+    await this.prisma.emailOtpChallenge.deleteMany({
+      where: { email: normalizedEmail, purpose },
+    });
+
+    const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+    const codeHash = this.hashToken(code);
+    const expiresAt = this.getOtpExpiresAt();
+
+    await this.prisma.emailOtpChallenge.create({
+      data: {
+        email: normalizedEmail,
+        purpose,
+        codeHash,
+        expiresAt,
+      },
+    });
+
+    await this.emailService.sendOtpEmail({
+      to: normalizedEmail,
+      code,
+      purpose,
+    });
+
+    this.otpResendCooldownByKey.set(cooldownKey, Date.now());
+
+    return {
+      ok: true,
+      expiresInSeconds: this.getOtpExpiresInSeconds(),
+    };
+  }
+
+  async resendEmailCode(
+    email: string,
+    purpose: EmailOtpPurpose,
+  ): Promise<SendEmailCodeResponse> {
+    return this.sendEmailCode(email, purpose);
+  }
+
+  async verifyEmailCode(
+    email: string,
+    code: string,
+    purpose: EmailOtpPurpose,
+  ): Promise<TokenPair> {
+    const normalizedEmail = this.normalizeEmail(email);
+    const challenge = await this.prisma.emailOtpChallenge.findFirst({
+      where: {
+        email: normalizedEmail,
+        purpose,
+        usedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const maxAttempts = this.configService.getOrThrow<number>("emailOtpMaxAttempts");
+
+    if (!challenge || challenge.attempts >= maxAttempts) {
+      throw new UnauthorizedException("Invalid or expired verification code");
+    }
+
+    const codeHash = this.hashToken(code);
+
+    if (codeHash !== challenge.codeHash) {
+      await this.prisma.emailOtpChallenge.update({
+        where: { id: challenge.id },
+        data: { attempts: { increment: 1 } },
+      });
+
+      throw new UnauthorizedException("Invalid or expired verification code");
+    }
+
+    let user: User;
+    const existing = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existing) {
+      user = existing.emailVerifiedAt
+        ? existing
+        : await this.prisma.user.update({
+            where: { id: existing.id },
+            data: { emailVerifiedAt: new Date() },
+          });
+    } else {
+      user = await this.prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash: null,
+          emailVerifiedAt: new Date(),
+        },
+      });
+    }
+
+    await this.prisma.emailOtpChallenge.update({
+      where: { id: challenge.id },
+      data: { usedAt: new Date() },
+    });
+
+    return this.issueTokenPair(user);
   }
 
   async validateGoogleProfile(profile: GoogleProfileInput): Promise<User> {
@@ -339,6 +462,30 @@ export class AuthService {
       "emailVerificationExpiresHours",
     );
     return new Date(Date.now() + hours * 60 * 60 * 1000);
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private otpCooldownKey(email: string, purpose: EmailOtpPurpose): string {
+    return `${email}:${purpose}`;
+  }
+
+  private getOtpResendCooldownMs(): number {
+    const seconds = this.configService.getOrThrow<number>(
+      "emailOtpResendCooldownSeconds",
+    );
+    return seconds * 1000;
+  }
+
+  private getOtpExpiresInSeconds(): number {
+    const minutes = this.configService.getOrThrow<number>("emailOtpExpiresMinutes");
+    return minutes * 60;
+  }
+
+  private getOtpExpiresAt(): Date {
+    return new Date(Date.now() + this.getOtpExpiresInSeconds() * 1000);
   }
 
   private isJwtExpPayload(value: unknown): value is { exp: number } {

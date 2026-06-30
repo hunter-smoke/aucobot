@@ -25,6 +25,9 @@ export const envSchema = z.object({
   EMAIL_FROM: z.string().default("Aucobot <noreply@send.aucobot.com>"),
   EMAIL_VERIFICATION_EXPIRES_HOURS: z.coerce.number().int().positive().default(24),
   UNVERIFIED_USER_TTL_HOURS: z.coerce.number().int().positive().default(72),
+  EMAIL_OTP_EXPIRES_MINUTES: z.coerce.number().int().positive().default(10),
+  EMAIL_OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().positive().default(60),
+  EMAIL_OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

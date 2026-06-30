@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import {
   ConflictException,
   ForbiddenException,
@@ -58,6 +60,12 @@ describe("AuthService", () => {
       update: jest.fn(),
       deleteMany: jest.fn(),
     },
+    emailOtpChallenge: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      deleteMany: jest.fn(),
+    },
   };
 
   const jwtService = {
@@ -80,6 +88,9 @@ describe("AuthService", () => {
         unverifiedUserTtlHours: 72,
         authAccessCookieMaxAgeMs: 900_000,
         refreshTokenExpiresInDays: 30,
+        emailOtpExpiresMinutes: 10,
+        emailOtpResendCooldownSeconds: 60,
+        emailOtpMaxAttempts: 5,
       };
 
       return values[key];
@@ -88,6 +99,7 @@ describe("AuthService", () => {
 
   const emailService = {
     sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+    sendOtpEmail: jest.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -108,6 +120,8 @@ describe("AuthService", () => {
     prisma.user.deleteMany.mockResolvedValue({ count: 0 });
     prisma.emailVerificationToken.deleteMany.mockResolvedValue({ count: 0 });
     prisma.emailVerificationToken.create.mockResolvedValue({ id: "evt-1" });
+    prisma.emailOtpChallenge.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.emailOtpChallenge.create.mockResolvedValue({ id: "otp-1" });
   });
 
   describe("register", () => {
@@ -236,6 +250,137 @@ describe("AuthService", () => {
 
       expect(result).toEqual({ ok: true });
       expect(emailService.sendVerificationEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe("email OTP", () => {
+    const email = "otp@aucobot.vn";
+    const code = "123456";
+    const codeHash = createHash("sha256").update(code).digest("hex");
+
+    const activeChallenge = {
+      id: "otp-1",
+      email,
+      purpose: "register" as const,
+      codeHash,
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 600_000),
+      usedAt: null,
+      createdAt: new Date(),
+    };
+
+    it("sendEmailCode does not create a user", async () => {
+      const result = await authService.sendEmailCode(email, "register");
+
+      expect(result).toEqual({ ok: true, expiresInSeconds: 600 });
+      expect(prisma.user.create).not.toHaveBeenCalled();
+      expect(prisma.emailOtpChallenge.create).toHaveBeenCalled();
+      expect(emailService.sendOtpEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: email, purpose: "register" }),
+      );
+    });
+
+    it("verify creates a new user when email is new", async () => {
+      prisma.emailOtpChallenge.findFirst.mockResolvedValue({
+        ...activeChallenge,
+        purpose: "register",
+      });
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue(mockUser({ email }));
+      prisma.emailOtpChallenge.update.mockResolvedValue({
+        ...activeChallenge,
+        usedAt: new Date(),
+      });
+
+      const result = await authService.verifyEmailCode(email, code, "register");
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            email,
+            passwordHash: null,
+            emailVerifiedAt: expect.any(Date) as Date,
+          }) as object,
+        }),
+      );
+      expect(result.accessToken).toBe("jwt-token");
+    });
+
+    it("verify signs in when email already exists (register route)", async () => {
+      const user = mockUser({ email });
+      prisma.emailOtpChallenge.findFirst.mockResolvedValue({
+        ...activeChallenge,
+        purpose: "register",
+      });
+      prisma.user.findUnique.mockResolvedValue(user);
+      prisma.emailOtpChallenge.update.mockResolvedValue({
+        ...activeChallenge,
+        usedAt: new Date(),
+      });
+
+      const result = await authService.verifyEmailCode(email, code, "register");
+
+      expect(prisma.user.create).not.toHaveBeenCalled();
+      expect(result.user.email).toBe(email);
+    });
+
+    it("verify creates user when email is new (login route)", async () => {
+      prisma.emailOtpChallenge.findFirst.mockResolvedValue({
+        ...activeChallenge,
+        purpose: "login",
+      });
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue(mockUser({ email }));
+      prisma.emailOtpChallenge.update.mockResolvedValue({
+        ...activeChallenge,
+        usedAt: new Date(),
+      });
+
+      await authService.verifyEmailCode(email, code, "login");
+
+      expect(prisma.user.create).toHaveBeenCalled();
+    });
+
+    it("verify signs in existing verified user (login route)", async () => {
+      const user = mockUser({ email });
+      prisma.emailOtpChallenge.findFirst.mockResolvedValue({
+        ...activeChallenge,
+        purpose: "login",
+      });
+      prisma.user.findUnique.mockResolvedValue(user);
+      prisma.emailOtpChallenge.update.mockResolvedValue({
+        ...activeChallenge,
+        usedAt: new Date(),
+      });
+
+      const result = await authService.verifyEmailCode(email, code, "login");
+
+      expect(prisma.user.create).not.toHaveBeenCalled();
+      expect(result.user.email).toBe(email);
+    });
+
+    it("verify verifies legacy unverified user on OTP success", async () => {
+      const unverified = mockUser({ email, emailVerifiedAt: null });
+      prisma.emailOtpChallenge.findFirst.mockResolvedValue({
+        ...activeChallenge,
+        purpose: "login",
+      });
+      prisma.user.findUnique.mockResolvedValue(unverified);
+      prisma.user.update.mockResolvedValue(mockUser({ email }));
+      prisma.emailOtpChallenge.update.mockResolvedValue({
+        ...activeChallenge,
+        usedAt: new Date(),
+      });
+
+      await authService.verifyEmailCode(email, code, "login");
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: unverified.id },
+          data: { emailVerifiedAt: expect.any(Date) as Date },
+        }),
+      );
+      expect(prisma.user.create).not.toHaveBeenCalled();
     });
   });
 

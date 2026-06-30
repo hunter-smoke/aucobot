@@ -1,3 +1,15 @@
+export {
+  emailOtpPurposeSchema,
+  resendEmailCodeSchema,
+  sendEmailCodeSchema,
+  verifyEmailCodeSchema,
+  type EmailOtpPurpose,
+  type ResendEmailCodeInput,
+  type SendEmailCodeInput,
+  type SendEmailCodeResponse,
+  type VerifyEmailCodeInput,
+} from "./auth-otp";
+
 export const API_DEFAULT_PORT = 8387;
 export const WEB_DEFAULT_PORT = 8386;
 

@@ -4,7 +4,7 @@ function readEnv(): EnvConfig {
   return envSchema.parse({
     NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
-    API_PORT: process.env.API_PORT,
+    API_PORT: process.env.API_PORT ?? process.env.PORT,
     WEB_ORIGIN: process.env.WEB_ORIGIN,
     JWT_SECRET: process.env.JWT_SECRET,
     JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN,
@@ -19,6 +19,9 @@ function readEnv(): EnvConfig {
     EMAIL_FROM: process.env.EMAIL_FROM,
     EMAIL_VERIFICATION_EXPIRES_HOURS: process.env.EMAIL_VERIFICATION_EXPIRES_HOURS,
     UNVERIFIED_USER_TTL_HOURS: process.env.UNVERIFIED_USER_TTL_HOURS,
+    EMAIL_OTP_EXPIRES_MINUTES: process.env.EMAIL_OTP_EXPIRES_MINUTES,
+    EMAIL_OTP_RESEND_COOLDOWN_SECONDS: process.env.EMAIL_OTP_RESEND_COOLDOWN_SECONDS,
+    EMAIL_OTP_MAX_ATTEMPTS: process.env.EMAIL_OTP_MAX_ATTEMPTS,
   });
 }
 
@@ -43,6 +46,9 @@ export const appConfig = () => {
     emailFrom: env.EMAIL_FROM,
     emailVerificationExpiresHours: env.EMAIL_VERIFICATION_EXPIRES_HOURS,
     unverifiedUserTtlHours: env.UNVERIFIED_USER_TTL_HOURS,
+    emailOtpExpiresMinutes: env.EMAIL_OTP_EXPIRES_MINUTES,
+    emailOtpResendCooldownSeconds: env.EMAIL_OTP_RESEND_COOLDOWN_SECONDS,
+    emailOtpMaxAttempts: env.EMAIL_OTP_MAX_ATTEMPTS,
   };
 };
 

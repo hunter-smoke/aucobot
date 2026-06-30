@@ -54,3 +54,23 @@ model EmailVerificationToken {
   @@index([expiresAt])
   @@map("email_verification_tokens")
 }
+
+enum EmailOtpPurpose {
+  login
+  register
+}
+
+model EmailOtpChallenge {
+  id        String          @id @default(cuid())
+  email     String
+  purpose   EmailOtpPurpose
+  codeHash  String          @unique @map("code_hash")
+  attempts  Int             @default(0)
+  expiresAt DateTime        @map("expires_at")
+  usedAt    DateTime?       @map("used_at")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  @@index([email, purpose])
+  @@index([expiresAt])
+  @@map("email_otp_challenges")
+}

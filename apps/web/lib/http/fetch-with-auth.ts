@@ -1,8 +1,8 @@
-import { API_DEFAULT_PORT } from "@aucobot/shared";
-
-import type { AuthSessionMeta, AuthSuccessResponse } from "@aucobot/shared";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? `http://localhost:${API_DEFAULT_PORT}`;
+import { getApiBaseUrl } from "@/lib/http/api-base-url";
+import {
+  authSessionMetaSchema,
+  authSuccessResponseSchema,
+} from "@/schemas/auth.schema";
 
 /** Refresh access token when less than 2 minutes remain. */
 const PROACTIVE_REFRESH_THRESHOLD_MS = 2 * 60 * 1000;
@@ -25,7 +25,9 @@ function shouldSkipRefresh(url: string): boolean {
     url.includes("/api/auth/login") ||
     url.includes("/api/auth/register") ||
     url.includes("/api/auth/verify-email") ||
-    url.includes("/api/auth/resend-verification") ||
+    url.includes("/api/auth/email/send-code") ||
+    url.includes("/api/auth/email/verify-code") ||
+    url.includes("/api/auth/email/resend-code") ||
     url.includes("/api/auth/logout") ||
     url.includes("/api/auth/session")
   );
@@ -41,7 +43,7 @@ function shouldRefreshProactively(): boolean {
 
 async function syncSessionExpiry(): Promise<void> {
   try {
-    const res = await fetch(`${API_URL}/api/auth/session`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/auth/session`, {
       credentials: "include",
     });
 
@@ -49,7 +51,7 @@ async function syncSessionExpiry(): Promise<void> {
       return;
     }
 
-    const data = (await res.json()) as AuthSessionMeta;
+    const data = authSessionMetaSchema.parse(await res.json());
 
     if (data.accessExpiresAt) {
       accessExpiresAtMs = new Date(data.accessExpiresAt).getTime();
@@ -66,7 +68,7 @@ async function refreshAccessTokens(): Promise<boolean> {
 
   refreshInFlight = (async () => {
     try {
-      const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
         method: "POST",
         credentials: "include",
       });
@@ -76,7 +78,7 @@ async function refreshAccessTokens(): Promise<boolean> {
         return false;
       }
 
-      const data = (await res.json()) as AuthSuccessResponse & { ok?: boolean };
+      const data = authSuccessResponseSchema.parse(await res.json());
 
       if (data.accessExpiresAt) {
         accessExpiresAtMs = new Date(data.accessExpiresAt).getTime();
@@ -131,5 +133,3 @@ export async function fetchWithAuth(input: string, init?: RequestInit): Promise<
 
   return request();
 }
-
-export { API_URL };

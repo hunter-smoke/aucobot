@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev --port 8386",
     "start": "next start --port 8386",
-    "lint": "next lint",
+    "lint": "eslint . --fix",
+    "lint:ci": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
   },
@@ -14,14 +15,20 @@
     "@aucobot/shared": "workspace:*",
     "next": "^16.2.9",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.8",
+    "@eslint/js": "^9.39.4",
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.8",
-    "typescript": "^5.8.3"
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.9",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import": "^2.32.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.62.0"
   }
 }
