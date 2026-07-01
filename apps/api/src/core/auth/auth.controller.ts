@@ -22,6 +22,7 @@ import { WEB_DEFAULT_PORT } from "@aucobot/shared";
 
 import { CurrentUser } from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
+import { getClientIp } from "../common/utils/get-client-ip.util";
 
 import {
   ACCESS_TOKEN_COOKIE,
@@ -31,14 +32,10 @@ import {
   setAuthCookies,
   type AuthCookieMaxAge,
 } from "./auth-cookie.util";
-import { LoginDto } from "./dto/login.dto";
-import { RegisterDto } from "./dto/register.dto";
 import { ResendEmailCodeDto } from "./dto/resend-email-code.dto";
-import { ResendVerificationDto } from "./dto/resend-verification.dto";
 import { SendEmailCodeDto } from "./dto/send-email-code.dto";
 import { VerifyEmailCodeDto } from "./dto/verify-email-code.dto";
-import { VerifyEmailDto } from "./dto/verify-email.dto";
-import { AuthService, type AuthUser } from "./service/auth.service";
+import { AuthService, type AuthUser } from "./service/auth/auth.service";
 
 import type { AuthenticatedUser } from "../common/decorators/current-user.decorator";
 import type { Request, Response } from "express";
@@ -51,46 +48,14 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
-  // --- Email/password registration & verification ---
-
-  @Public()
-  @Post("register")
-  @ApiOperation({ summary: "Register with email and password" })
-  @ApiOkResponse({ description: "Verification email sent — no session until verified" })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
-  }
-
-  @Public()
-  @Post("verify-email")
-  @ApiOperation({ summary: "Verify email from link token and sign in" })
-  @ApiOkResponse({ description: "Access + refresh cookies set after verification" })
-  async verifyEmail(
-    @Body() dto: VerifyEmailDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const tokens = await this.authService.verifyEmail(dto.token);
-    setAuthCookies(res, tokens, this.getCookieMaxAge());
-
-    return { ok: true, user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
-  }
-
-  @Public()
-  @Post("resend-verification")
-  @ApiOperation({ summary: "Resend verification email" })
-  @ApiOkResponse({ description: "Always returns ok to avoid email enumeration" })
-  resendVerification(@Body() dto: ResendVerificationDto) {
-    return this.authService.resendVerificationEmail(dto.email);
-  }
-
   // --- Email OTP (login / register) ---
 
   @Public()
   @Post("email/send-code")
   @ApiOperation({ summary: "Send 6-digit OTP for login or register" })
   @ApiOkResponse({ description: "Generic ok — does not create a user" })
-  sendEmailCode(@Body() dto: SendEmailCodeDto) {
-    return this.authService.sendEmailCode(dto.email, dto.purpose);
+  sendEmailCode(@Body() dto: SendEmailCodeDto, @Req() req: Request) {
+    return this.authService.sendEmailCode(dto.email, dto.purpose, getClientIp(req));
   }
 
   @Public()
@@ -99,12 +64,14 @@ export class AuthController {
   @ApiOkResponse({ description: "Access + refresh cookies set on success" })
   async verifyEmailCode(
     @Body() dto: VerifyEmailCodeDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const tokens = await this.authService.verifyEmailCode(
       dto.email,
       dto.code,
       dto.purpose,
+      getClientIp(req),
     );
     setAuthCookies(res, tokens, this.getCookieMaxAge());
 
@@ -115,22 +82,11 @@ export class AuthController {
   @Post("email/resend-code")
   @ApiOperation({ summary: "Resend OTP after cooldown" })
   @ApiOkResponse({ description: "Generic ok" })
-  resendEmailCode(@Body() dto: ResendEmailCodeDto) {
-    return this.authService.resendEmailCode(dto.email, dto.purpose);
+  resendEmailCode(@Body() dto: ResendEmailCodeDto, @Req() req: Request) {
+    return this.authService.resendEmailCode(dto.email, dto.purpose, getClientIp(req));
   }
 
-  // --- Email/password session ---
-
-  @Public()
-  @Post("login")
-  @ApiOperation({ summary: "Login with email and password" })
-  @ApiOkResponse({ description: "Access + refresh cookies set" })
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const tokens = await this.authService.loginWithPassword(dto.email, dto.password);
-    setAuthCookies(res, tokens, this.getCookieMaxAge());
-
-    return { user: tokens.user, accessExpiresAt: tokens.accessExpiresAt };
-  }
+  // --- Session ---
 
   @Public()
   @Post("logout")

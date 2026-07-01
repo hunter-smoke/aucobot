@@ -4,7 +4,8 @@ export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   DATABASE_URL: z.string().min(1),
   API_PORT: z.coerce.number().int().positive().default(8387),
-  WEB_ORIGIN: z.string().url().default("http://localhost:8386"),
+  WEB_ORIGIN: z.string().url().default("http://app.localhost:8386"),
+  MARKETING_ORIGIN: z.string().url().default("http://localhost:8386"),
   JWT_SECRET: z.string().min(16).default("dev-jwt-secret-change-me-in-production"),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   AUTH_ACCESS_COOKIE_MAX_AGE_MS: z.coerce.number().int().positive().default(900_000),
@@ -14,6 +15,11 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(2_592_000_000),
+  /** Production: `.aucobot.com` so www / app / api share session cookies. Omit in dev. */
+  AUTH_COOKIE_DOMAIN: z
+    .string()
+    .regex(/^\./, "AUTH_COOKIE_DOMAIN must start with '.' (e.g. .aucobot.com)")
+    .optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z
@@ -23,11 +29,18 @@ export const envSchema = z.object({
   SWAGGER_ENABLED: z.coerce.boolean().default(true),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Aucobot <noreply@send.aucobot.com>"),
-  EMAIL_VERIFICATION_EXPIRES_HOURS: z.coerce.number().int().positive().default(24),
-  UNVERIFIED_USER_TTL_HOURS: z.coerce.number().int().positive().default(72),
+  REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
+  REDIS_KEY_PREFIX: z
+    .string()
+    .min(1)
+    .default("aucobot:")
+    .transform((value) => (value.endsWith(":") ? value : `${value}:`)),
   EMAIL_OTP_EXPIRES_MINUTES: z.coerce.number().int().positive().default(10),
   EMAIL_OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().positive().default(60),
   EMAIL_OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  EMAIL_OTP_IP_MAX_REQUESTS: z.coerce.number().int().positive().default(10),
+  EMAIL_OTP_IP_WINDOW_SECONDS: z.coerce.number().int().positive().default(600),
+  EMAIL_OTP_HMAC_SECRET: z.string().min(16).optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

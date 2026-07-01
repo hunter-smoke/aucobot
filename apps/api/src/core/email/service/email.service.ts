@@ -3,7 +3,6 @@ import { ConfigService } from "@nestjs/config";
 
 import { LoggingService } from "../../logging/logging.service";
 import { buildOtpEmail } from "../templates/otp-email.template";
-import { buildVerificationEmail } from "../templates/verification-email.template";
 
 import type { EmailOtpPurpose } from "@aucobot/shared";
 
@@ -18,38 +17,6 @@ export class EmailService {
     private readonly configService: ConfigService,
     private readonly loggingService: LoggingService,
   ) {}
-
-  async sendVerificationEmail(params: {
-    to: string;
-    name: string | null;
-    verifyUrl: string;
-  }): Promise<void> {
-    const expiresHours = this.configService.getOrThrow<number>(
-      "emailVerificationExpiresHours",
-    );
-    const content = buildVerificationEmail({
-      name: params.name,
-      verifyUrl: params.verifyUrl,
-      expiresHours,
-    });
-
-    const apiKey = this.configService.get<string>("resendApiKey");
-
-    if (!apiKey) {
-      this.loggingService.warn(
-        `RESEND_API_KEY missing — verification link for ${params.to}: ${params.verifyUrl}`,
-        "EmailService",
-      );
-      return;
-    }
-
-    await this.sendResendEmail({
-      to: params.to,
-      subject: content.subject,
-      html: content.html,
-      text: content.text,
-    });
-  }
 
   async sendOtpEmail(params: {
     to: string;

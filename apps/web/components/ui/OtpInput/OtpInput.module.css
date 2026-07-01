@@ -5,10 +5,10 @@
 }
 
 .digit {
-  background: #fff;
-  border: 1px solid #d0d3d6;
-  border-radius: 8px;
-  color: #1f2329;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-foreground);
   font-size: var(--font-lg);
   height: 48px;
   text-align: center;
@@ -16,8 +16,8 @@
 }
 
 .digit:focus {
-  border-color: #3370ff;
-  outline: 2px solid rgba(51, 112, 255, 0.2);
+  border-color: var(--color-primary);
+  outline: var(--focus-ring);
   outline-offset: 0;
 }
 

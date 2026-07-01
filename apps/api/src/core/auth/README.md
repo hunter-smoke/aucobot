@@ -1,124 +1,71 @@
-# Auth — Email OTP (implemented)
+# Auth — Email OTP only
 
-> Passwordless email qua **6-digit code** (Resend). User **chỉ được tạo khi `verify-code` + `purpose=register` thành công**.  
-> Web: `/login` và `/register` · REST only.
+> Passwordless email qua **6-digit code** (Resend) + **Google OAuth**. User chỉ được tạo khi `verify-code` thành công.
 
-## Quyết định sản phẩm
+## Auth methods
 
-| Mục | Chốt |
-|-----|------|
-| Routes web | `/login` và `/register` — `purpose` cho email copy |
-| Verify (unified) | OTP đúng → create nếu mới, login nếu đã có |
-| `send-code` | Gửi mail + lưu challenge — **không** tạo user |
-| Mã | **6 chữ số**, TTL **10 phút** |
-| Email | **Resend** — template **English** |
-| Password API | **Giữ** `POST login` / `register` cho admin/dev |
+| Method | Endpoint |
+|--------|----------|
+| Email OTP | `POST /api/auth/email/send-code`, `verify-code`, `resend-code` |
+| Google | `GET /api/auth/google`, `google/callback` |
+| Session | `POST /api/auth/refresh`, `logout` · `GET /api/auth/me`, `session` |
 
-## Endpoints
+## Verify (unified)
 
-### `POST /api/auth/email/send-code`
+OTP đúng → chưa có user thì **create**, đã có thì **login** (kể cả user chưa `emailVerifiedAt` → set verified).
 
-```json
-{ "email": "user@example.com", "purpose": "login" }
-```
+`purpose` (`login` / `register`) chỉ dùng cho challenge lookup + copy email Resend.
 
-`purpose`: `"login"` \| `"register"`
+## Security (OTP)
 
-**Server:** normalize email → rate limit → xóa challenge cũ (email + purpose) → sinh mã → hash → insert `email_otp_challenges` → Resend.
+Redis keys use a two-layer prefix:
 
-```json
-{ "ok": true, "expiresInSeconds": 600 }
-```
+1. **App prefix** — `REDIS_KEY_PREFIX` (default `aucobot:`), applied by ioredis on every key
+2. **Feature namespace** — built in `core/redis/redis-keys.ts`
 
-### `POST /api/auth/email/verify-code`
+| Key (logical) | Example |
+|---------------|---------|
+| Resend cooldown | `auth:otp:cooldown:{email}:{purpose}` |
+| IP rate limit | `auth:otp:ip:{send\|verify}:{ip}` |
 
-```json
-{ "email": "user@example.com", "code": "123456", "purpose": "register" }
-```
+Full key in Redis: `aucobot:auth:otp:cooldown:user@mail.com:login`
 
-- **`purpose=register` / `purpose=login`:** chỉ dùng để tìm challenge + copy email Resend.
-- OTP đúng:
-  - Chưa có user → `create` (`emailVerifiedAt: now`, `passwordHash: null`)
-  - Đã có user, chưa verify → `update emailVerifiedAt`
-  - Đã verify → `issueTokenPair`
-- Đánh dấu challenge `usedAt`, Set-Cookie.
+Reserved for cron/scheduling: `cron:lock:{id}`, `cron:trigger:{id}` (see `cronRedisKeys`).
 
-### `POST /api/auth/email/resend-code`
+| Control | Implementation |
+|---------|----------------|
+| Resend cooldown | Redis TTL = `EMAIL_OTP_RESEND_COOLDOWN_SECONDS` (default 60s) |
+| IP rate limit | Redis `INCR` + `EXPIRE` — max `EMAIL_OTP_IP_MAX_REQUESTS` (default 10) per `EMAIL_OTP_IP_WINDOW_SECONDS` (default 600s) |
+| Brute-force | Max `EMAIL_OTP_MAX_ATTEMPTS` (default 5); challenge gets `usedAt` on lockout |
+| OTP storage | HMAC-SHA256 with `EMAIL_OTP_HMAC_SECRET` (falls back to `JWT_SECRET`) |
+| OTP generation | `randomInt` from `node:crypto` |
 
-Cùng body `send-code`, cooldown **60s** / email + purpose.
+**Why Redis, not `@nestjs/throttler`?** Throttler defaults to in-memory (no multi-instance sync). Redis storage needs an extra adapter; we also need separate per-email cooldown vs per-IP counters — `OtpRateLimitService` handles both with one client.
+
+Behind a reverse proxy, API sets `trust proxy` and reads `X-Forwarded-For` for client IP.
 
 ## Database
 
-```prisma
-enum EmailOtpPurpose { login register }
-
-model EmailOtpChallenge {
-  id        String          @id @default(cuid())
-  email     String
-  purpose   EmailOtpPurpose
-  codeHash  String          @unique
-  attempts  Int             @default(0)
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime        @default(now())
-
-  @@index([email, purpose])
-}
-```
-
-Migration: `20250630120000_add_email_otp_challenges`
+- `users` — không còn `password_hash`
+- `email_otp_challenges` — OTP hash + attempts
+- `refresh_tokens` — session
 
 ## Env
 
 ```env
+REDIS_URL="redis://localhost:6379"
+REDIS_KEY_PREFIX="aucobot:"
+RESEND_API_KEY=
+EMAIL_FROM="Aucobot <noreply@aucobot.com>"
 EMAIL_OTP_EXPIRES_MINUTES=10
 EMAIL_OTP_RESEND_COOLDOWN_SECONDS=60
 EMAIL_OTP_MAX_ATTEMPTS=5
-RESEND_API_KEY=
-EMAIL_FROM="Aucobot <noreply@aucobot.com>"
+EMAIL_OTP_IP_MAX_REQUESTS=10
+EMAIL_OTP_IP_WINDOW_SECONDS=600
+EMAIL_OTP_HMAC_SECRET=   # optional; defaults to JWT_SECRET
+
+# Production — cookies shared across www / app / api (omit in local dev)
+AUTH_COOKIE_DOMAIN=.aucobot.com
+WEB_ORIGIN=https://app.aucobot.com
+MARKETING_ORIGIN=https://www.aucobot.com
 ```
-
-## Email subjects (EN)
-
-| Purpose | Subject |
-|---------|---------|
-| register | Your Aucobot sign-up code |
-| login | Your Aucobot sign-in code |
-
-Template: `core/email/templates/otp-email.template.ts`
-
-## Endpoints giữ nguyên (admin/dev)
-
-| Endpoint | Ghi chú |
-|----------|---------|
-| `POST /api/auth/login` | Password |
-| `POST /api/auth/register` | Password + link verify |
-| `POST /api/auth/verify-email` | Link token — legacy |
-| `GET /api/auth/google` | OAuth — web dùng |
-
-## Shared Zod (`@aucobot/shared`)
-
-- `emailOtpPurposeSchema`
-- `sendEmailCodeSchema` / `verifyEmailCodeSchema` / `resendEmailCodeSchema`
-
-## Sequence
-
-```mermaid
-sequenceDiagram
-  participant W as Web
-  participant A as API
-  participant DB as PostgreSQL
-
-  W->>A: POST send-code { email, purpose }
-  A->>DB: EmailOtpChallenge (no user)
-  A-->>W: { ok, expiresInSeconds }
-
-  W->>A: POST verify-code { email, code, purpose }
-  alt purpose=register + new email
-    A->>DB: create User
-  else purpose=login + existing user
-    A->>DB: load User
-  end
-  A-->>W: Set-Cookie + user
-```
-

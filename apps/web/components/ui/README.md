@@ -2,6 +2,11 @@
 
 Design system nội bộ — CSS Modules, không Tailwind/shadcn.
 
+## Implemented
+
+- `StatusBadge/` — health / online indicator
+- `OtpInput/`
+
 ## Planned components
 
 - `Button/`

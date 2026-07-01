@@ -1,0 +1,135 @@
+.shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.panel {
+  background: var(--color-panel);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--sidebar-width);
+}
+
+.panelHeader {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+.panelEyebrow {
+  color: var(--color-muted-foreground);
+  font-size: var(--font-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.panelUser {
+  font-size: var(--font-md);
+  font-weight: 600;
+  margin-top: var(--space-1);
+}
+
+.threadList {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  list-style: none;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.threadItem,
+.threadActive {
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-md);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  transition: background var(--transition);
+  width: 100%;
+}
+
+.threadItem {
+  background: transparent;
+  color: var(--color-foreground);
+}
+
+.threadItem:hover {
+  background: var(--color-thread-hover);
+}
+
+.threadActive {
+  background: var(--color-thread-active);
+  color: var(--color-foreground);
+  font-weight: 500;
+}
+
+.chat {
+  background: var(--color-chat);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chatHeader {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-6);
+}
+
+.chatTitle {
+  font-size: var(--font-lg);
+  font-weight: 600;
+}
+
+.chatBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.chatPlaceholder {
+  color: var(--color-muted-foreground);
+  font-size: var(--font-sm);
+}
+
+.chatEmpty {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.chatEmptyTitle {
+  font-size: var(--font-xl);
+  font-weight: 600;
+}
+
+.chatEmptyLead {
+  color: var(--color-muted-foreground);
+  font-size: var(--font-sm);
+  max-width: 24rem;
+}
+
+.hashExample {
+  background: var(--color-muted);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+@media (max-width: 768px) {
+  .panel {
+    display: none;
+  }
+}

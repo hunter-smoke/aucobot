@@ -3,27 +3,36 @@ import type { Response } from "express";
 export const ACCESS_TOKEN_COOKIE = "access_token";
 export const REFRESH_TOKEN_COOKIE = "refresh_token";
 
-const cookieBase = {
-  httpOnly: true,
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
-};
-
 export interface AuthCookieMaxAge {
   accessMaxAgeMs: number;
   refreshMaxAgeMs: number;
 }
 
+/** Shared across www / app / api on production (e.g. `.aucobot.com`). Omit in dev. */
+function authCookieDomain(): string | undefined {
+  const domain = process.env.AUTH_COOKIE_DOMAIN?.trim();
+  return domain || undefined;
+}
+
+function cookieBaseOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    ...(authCookieDomain() ? { domain: authCookieDomain() } : {}),
+  };
+}
+
 export function setAccessCookie(res: Response, token: string, maxAgeMs: number): void {
   res.cookie(ACCESS_TOKEN_COOKIE, token, {
-    ...cookieBase,
+    ...cookieBaseOptions(),
     maxAge: maxAgeMs,
   });
 }
 
 export function setRefreshCookie(res: Response, token: string, maxAgeMs: number): void {
   res.cookie(REFRESH_TOKEN_COOKIE, token, {
-    ...cookieBase,
+    ...cookieBaseOptions(),
     maxAge: maxAgeMs,
     path: "/api/auth",
   });
@@ -39,8 +48,9 @@ export function setAuthCookies(
 }
 
 export function clearAuthCookies(res: Response): void {
-  res.clearCookie(ACCESS_TOKEN_COOKIE, cookieBase);
-  res.clearCookie(REFRESH_TOKEN_COOKIE, { ...cookieBase, path: "/api/auth" });
+  const base = cookieBaseOptions();
+  res.clearCookie(ACCESS_TOKEN_COOKIE, base);
+  res.clearCookie(REFRESH_TOKEN_COOKIE, { ...base, path: "/api/auth" });
 }
 
 export function readCookieValue(cookies: unknown, name: string): string | undefined {

@@ -1,85 +1,47 @@
 # Aucobot Web — Sơ đồ folder (kế hoạch)
 
 > **Frontend mỏng:** Next.js + Zustand chỉ stream & hiển thị. Não nghiệp vụ ở `apps/api`.  
-> **Giao thức (đã chốt):** REST + WebSocket — không GraphQL.  
-> Mỗi folder có `README.md` mô tả vai trò — **chưa code** trừ MVP tạm (`app/page.tsx`, `lib/http/*`, `lib/api/auth.ts`).  
-> Chi tiết rule: [`.agent/rule.md`](./.agent/rule.md) · Architecture: [`../../aucobot-architecture.md`](../../aucobot-architecture.md)
+> **Domain:** `aucobot.com` = marketing + auth · `app.aucobot.com` = chat (`proxy.ts` rewrite).  
+> Chi tiết: [`.agent/rule.md`](./.agent/rule.md) · [`../../aucobot-architecture.md`](../../aucobot-architecture.md)
 
-## Luồng dữ liệu
-
-```text
-apps/api (brain)
-    │ REST (lệnh)     │ WebSocket (push)
-    ▼                 ▼
-lib/http + lib/api    lib/stream
-    │                 │
-    └────────┬────────┘
-             ▼
-hooks/<domain>                    ← pipe (không logic nghiệp vụ)
-             ▼
-stores/<domain>                   ← Zustand buffer stream + projection
-             ▼
-components/ + app/                ← render (Telegram-style)
-```
-
-## Cây thư mục
+## Cây thư mục (rút gọn)
 
 ```text
 apps/web/
-├── STRUCTURE.md              ← file này
-├── .agent/rule.md
+├── proxy.ts
 ├── app/
-│   ├── (auth)/               # /login + /register — email OTP ✅
-│   ├── (main)/               # app sau đăng nhập
-│   │   └── c/[departmentId]/ # chat thread (1 phòng = 1 department MVP)
-│   ├── setup/                # setup tối giản → gửi API
-│   └── _components/          # shared app components (StatusBadge…)
-├── components/
-│   ├── auth/                 # AuthShell, EmailStep, OtpStep ✅
-│   ├── ui/                   # Button, Input, OtpInput…
-│   ├── layout/               # AppShell, SplitPane, Composer
-│   └── chat/                 # MessageList, Bubble, StreamText
-├── hooks/
-│   ├── chat/                 # use-message-stream, use-send-message
-│   ├── thread/               # use-thread-list
-│   └── approval/             # use-approval-action
-├── lib/
-│   ├── http/                 # client, server-api, api-base-url ✅ một phần
-│   ├── api/                  # mirror REST API ✅ auth.ts
-│   └── stream/               # WebSocket agent-stream-client
-├── stores/
-│   ├── auth-flow/            # OTP step state ✅
-│   ├── message/              # buffer tin + stream chunks
-│   ├── thread/               # danh sách phòng + selection
-│   └── connection/           # WS status, reconnect
-├── schemas/                  # wrap @aucobot/shared ✅ một phần
-├── utils/
-│   ├── chat/                 # merge chunks, format bubble
-│   └── format/               # time, locale display
-├── public/
-├── scripts/                  # dev/CI tooling
-├── proxy.ts                  # (planned) auth guard edge
-├── eslint.config.mjs         ✅
-└── next.config.ts            ✅
+│   ├── site/                 # aucobot.com — landing + login/register ✅
+│   └── app/                  # app.aucobot.com — ClientAppShell ✅
+│       ├── page.tsx
+│       └── _components/ClientAppShell/
+├── hooks/thread/
+│   └── use-department-id-from-hash.ts ✅
+├── utils/chat/
+│   └── department-hash.ts ✅
+├── components/               # layout/, chat/ 🔜
+└── lib/host/
 ```
 
-## REST vs WebSocket
+## Chat URL (Telegram-style)
 
-| | REST (`lib/api`) | WebSocket (`lib/stream`) |
-|---|------------------|---------------------------|
-| Hướng | Client → server (lệnh) | Server → client (push) |
-| Ví dụ | Gửi tin, duyệt, setup | `message.chunk`, `job.status` |
-| MVP code | `auth.ts` ✅ | 🔜 chờ API gateway |
+```text
+app.aucobot.com/              thread list, chưa chọn
+app.aucobot.com/#1244557231   chat department
+```
 
-## Trạng thái implement
+## Subdomain (dev)
 
-| Folder | Trạng thái |
-|--------|------------|
-| `lib/http/`, `lib/api/auth.ts`, `schemas/` | ✅ |
-| `app/(auth)/`, `components/auth/`, `stores/auth-flow/` | ✅ Email OTP |
-| `app/page.tsx` | Guest redirect → `/login` |
-| Còn lại (chat, stream) | Chỉ `README.md` — chờ API contract |
+| Host | Nội dung |
+|------|----------|
+| `localhost:8386` | Marketing + `/login`, `/register` |
+| `app.localhost:8386` | Chat shell |
 
-## UX định hướng
+**Env:** API đọc `../../.env` · Next đọc `apps/web/.env.local` (mẫu: `.env.local.example`).
 
-Telegram-style: list thread (phòng marketing) | chat full-bleed. Không dashboard AI SaaS.
+## Trạng thái
+
+| Phần | Trạng thái |
+|------|------------|
+| Subdomain, auth, hash shell | ✅ scaffold |
+| API departments + messages | 🔜 |
+| Stream WebSocket | 🔜 |

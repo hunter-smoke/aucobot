@@ -22,9 +22,6 @@ export function clearAuthSession(): void {
 function shouldSkipRefresh(url: string): boolean {
   return (
     url.includes("/api/auth/refresh") ||
-    url.includes("/api/auth/login") ||
-    url.includes("/api/auth/register") ||
-    url.includes("/api/auth/verify-email") ||
     url.includes("/api/auth/email/send-code") ||
     url.includes("/api/auth/email/verify-code") ||
     url.includes("/api/auth/email/resend-code") ||

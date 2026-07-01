@@ -14,5 +14,5 @@ HTTP transport — **không** biết department, message, approval.
 
 ## Chỉ import từ
 
-- RSC / `middleware` / `proxy.ts` (`server-api`)
+- RSC / `proxy.ts` (`server-api`)
 - `lib/api/*`, `lib/stream/*` (`client`, `fetch-with-auth`)

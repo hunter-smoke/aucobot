@@ -29,11 +29,6 @@ export interface UserResponse {
   createdAt: string;
 }
 
-export interface RegisterResponse {
-  message: string;
-  email: string;
-}
-
 /** JWT access token expiry (ISO). Null when no valid access cookie. */
 export interface AuthSessionMeta {
   accessExpiresAt: string | null;

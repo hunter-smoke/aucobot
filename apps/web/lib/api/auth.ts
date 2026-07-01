@@ -8,14 +8,12 @@ import {
 import {
   apiErrorMessageSchema,
   authSuccessResponseSchema,
-  registerResponseSchema,
   sendEmailCodeResponseSchema,
   userResponseSchema,
 } from "@/schemas/auth.schema";
 import type {
   AuthSuccessResponse,
   EmailOtpPurpose,
-  RegisterResponse,
   SendEmailCodeResponse,
   UserResponse,
 } from "@aucobot/shared";
@@ -29,6 +27,7 @@ export class AuthApiError extends Error {
     this.status = status;
   }
 }
+
 function formatApiError(data: unknown, fallback: string): string {
   const parsed = apiErrorMessageSchema.safeParse(data);
 
@@ -58,73 +57,6 @@ export const authApi = {
     }
 
     return userResponseSchema.parse(await res.json());
-  },
-
-  async register(body: {
-    email: string;
-    password: string;
-    name?: string;
-  }): Promise<RegisterResponse> {
-    const res = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    const data: unknown = await res.json();
-
-    if (!res.ok) {
-      throw new Error(formatApiError(data, "Request failed"));
-    }
-
-    return registerResponseSchema.parse(data);
-  },
-
-  async login(body: { email: string; password: string }): Promise<AuthSuccessResponse> {
-    const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    const data: unknown = await res.json();
-
-    if (!res.ok) {
-      throw new Error(formatApiError(data, "Request failed"));
-    }
-
-    const parsed = authSuccessResponseSchema.parse(data);
-
-    if (parsed.accessExpiresAt) {
-      setAuthSession(parsed.accessExpiresAt);
-    }
-
-    return parsed;
-  },
-
-  async verifyEmail(token: string): Promise<AuthSuccessResponse> {
-    const res = await fetch(`${getApiBaseUrl()}/api/auth/verify-email`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-
-    const data: unknown = await res.json();
-
-    if (!res.ok) {
-      throw new Error(formatApiError(data, "Verification failed."));
-    }
-
-    const parsed = authSuccessResponseSchema.parse(data);
-
-    if (parsed.accessExpiresAt) {
-      setAuthSession(parsed.accessExpiresAt);
-    }
-
-    return parsed;
   },
 
   async sendEmailCode(
@@ -192,19 +124,6 @@ export const authApi = {
     }
 
     return sendEmailCodeResponseSchema.parse(data);
-  },
-
-  async resendVerification(email: string): Promise<void> {
-    const res = await fetch(`${getApiBaseUrl()}/api/auth/resend-verification`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Could not resend verification email.");
-    }
   },
 
   async logout(): Promise<void> {

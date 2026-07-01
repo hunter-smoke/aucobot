@@ -10,20 +10,15 @@ export const userResponseSchema = z.object({
   createdAt: z.string(),
 });
 
+export const sendEmailCodeResponseSchema = z.object({
+  ok: z.literal(true),
+  expiresInSeconds: z.number(),
+});
+
 export const authSuccessResponseSchema = z.object({
   ok: z.literal(true).optional(),
   user: userResponseSchema,
   accessExpiresAt: z.string(),
-});
-
-export const registerResponseSchema = z.object({
-  message: z.string(),
-  email: z.string(),
-});
-
-export const sendEmailCodeResponseSchema = z.object({
-  ok: z.literal(true),
-  expiresInSeconds: z.number(),
 });
 
 export const authSessionMetaSchema = z.object({

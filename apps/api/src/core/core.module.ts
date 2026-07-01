@@ -7,6 +7,7 @@ import { AppConfigModule } from "./config/config.module";
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
 import { LoggingModule } from "./logging/logging.module";
+import { RedisModule } from "./redis/redis.module";
 
 @Module({
   imports: [
@@ -14,12 +15,13 @@ import { LoggingModule } from "./logging/logging.module";
     CommonModule,
     DatabaseModule,
     LoggingModule,
+    RedisModule,
     AuthModule,
     HealthModule,
   ],
 })
 export class CoreModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes("*");
+    consumer.apply(RequestIdMiddleware).forRoutes("{*splat}");
   }
 }

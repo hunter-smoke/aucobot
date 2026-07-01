@@ -9,7 +9,8 @@ import { EmailModule } from "../email/email.module";
 
 import { AuthController } from "./auth.controller";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { AuthService } from "./service/auth.service";
+import { AuthService } from "./service/auth/auth.service";
+import { OtpRateLimitService } from "./service/otp-rate-limit/otp-rate-limit.service";
 import { GoogleStrategy } from "./strategies/google.strategy";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
@@ -33,6 +34,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   controllers: [AuthController],
   providers: [
     AuthService,
+    OtpRateLimitService,
     JwtStrategy,
     GoogleStrategy,
     {

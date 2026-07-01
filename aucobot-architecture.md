@@ -731,11 +731,8 @@ Frontend Next.js 16 (App Router) — deploy **Vercel**. **Frontend mỏng:** ch�
 apps/web/
 ├── STRUCTURE.md
 ├── app/
-│   ├── (auth)/                    login, register
-│   ├── (main)/                    shell Telegram-style
-│   │   ├── page.tsx               thread list
-│   │   └── c/[departmentId]/      chat + ClientChatPage
-│   └── setup/                     wizard form → API
+│   ├── site/                      landing + login/register
+│   └── app/                       app.aucobot.com — ClientAppShell + #departmentId
 ├── components/
 │   ├── ui/                        Button, Input, Spinner…
 │   ├── layout/                    AppShell, SplitPane, Composer
@@ -822,9 +819,6 @@ Email (web /login + /register — 2 route, unified verify, Zustand):
 
 Google (web):
   GET /api/auth/google → callback → Set-Cookie
-
-Password (admin/dev only — ẩn web MVP):
-  POST /api/auth/login | register | verify-email (link legacy)
 
 Session:
   web → fetch(API, { credentials: 'include' })

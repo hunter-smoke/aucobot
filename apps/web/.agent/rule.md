@@ -62,7 +62,7 @@ apps/api  ──REST + WebSocket──►  lib/http + lib/stream + lib/api
 - Token/session do **server** quản lý (`httpOnly` cookie hoặc flow chuẩn framework).
 - **Cấm** lưu access/refresh token trong `localStorage` / `sessionStorage`.
 - Một nơi xử l API, refresh, redirect hết phiên — không duplicate auth.
-- Route protected: guard **middleware/edge**, không chỉ ẩn UI.
+- Route protected: guard **proxy** (edge), không chỉ ẩn UI.
 
 ### 1.2 Phân quyền
 
@@ -204,8 +204,8 @@ apps/web/
 ├── STRUCTURE.md         Sơ đồ tổng + luồng data
 ├── app/                 Route + shell (§3.B)
 │   ├── (auth)/          login, register
-│   ├── (main)/          thread list + chat (Telegram-style)
-│   └── setup/           form gửi API
+│   ├── site/            # aucobot.com — landing + auth
+│   └── app/             # app.aucobot.com — chat
 ├── components/          ui/, layout/, chat/
 ├── hooks/<domain>/      pipe → lib + stores
 ├── stores/<domain>/     Zustand stream buffer
@@ -227,15 +227,12 @@ apps/web/
 
 ```text
 app/
-├── layout.tsx, providers.tsx, globals.css
-├── (auth)/login|register/page.tsx
-├── (main)/
-│   ├── layout.tsx              # shell 2 cột / mobile stack
-│   ├── page.tsx                # thread list hoặc redirect (1 dept MVP)
-│   └── c/[departmentId]/
-│       ├── page.tsx
-│       └── _components/ClientChatPage/
-└── setup/page.tsx + _components/
+├── layout.tsx, globals.css
+├── site/page.tsx                 # aucobot.com landing
+├── site/(auth)/login|register/   # auth trên domain chính
+├── app/
+│   ├── page.tsx                  # RSC → ClientAppShell
+│   └── _components/ClientAppShell/
 ```
 
 #### 3.B.2 `page.tsx` vs `ClientXxxPage`
@@ -248,8 +245,8 @@ app/
 | Business logic | ❌ | ❌ |
 
 - **`(auth)/`:** ngoại lệ — không bắt buộc `ClientXxxPage`.
-- **Chat** `(main)/c/[departmentId]`: full-bleed, không dashboard chrome.
-- Auth: `app/(auth)/login`, `app/(auth)/register` — không thêm feature mới ở root `app/page.tsx`.
+- **Chat** `app.aucobot.com/#departmentId` — một route `/`, hash chọn phòng (Telegram Web A).
+- Auth: `site/(auth)/login`, `site/(auth)/register` trên domain marketing.
 
 #### 3.B.3 `_components/`
 
@@ -320,7 +317,7 @@ Hook page-local: co-located trong `_components/ClientXxxPage/use-xxx.ts` — ch�
 
 | Kênh | Layer | Khi nào |
 |------|-------|---------|
-| REST client | `lib/http/client` → `lib/api/*` | Gửi tin, approve, setup form submit |
+| REST client | `lib/http/client` → `lib/api/*` | Gửi tin, approve |
 | REST server | `lib/http/server-api` | RSC `initialThreads` / `initialMessages` |
 | WebSocket | `lib/stream/*` | Stream agent reply, job/approval events (`message.chunk`, `job.status`, …) |
 

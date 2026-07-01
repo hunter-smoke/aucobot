@@ -1,14 +1,13 @@
-import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
 import { authApi, AuthApiError } from "@/lib/api/auth";
+import { appUrl } from "@/lib/host/urls";
 
 import type { AuthFlowStore } from "@/stores/auth-flow/auth-flow.store";
 
 const RESEND_COOLDOWN_MS = 60_000;
 
 export function useEmailOtpFlow(store: AuthFlowStore) {
-  const router = useRouter();
   const mode = store((s) => s.mode);
   const step = store((s) => s.step);
   const email = store((s) => s.email);
@@ -60,15 +59,14 @@ export function useEmailOtpFlow(store: AuthFlowStore) {
 
       try {
         await authApi.verifyEmailCode(email, code, mode);
-        router.push("/");
-        router.refresh();
+        window.location.assign(appUrl("/"));
       } catch (err) {
         handleApiError(err);
       } finally {
         setBusy(false);
       }
     },
-    [clearError, email, handleApiError, mode, router],
+    [clearError, email, handleApiError, mode],
   );
 
   const resendCode = useCallback(async () => {
