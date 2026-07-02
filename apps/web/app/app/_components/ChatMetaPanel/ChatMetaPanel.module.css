@@ -31,7 +31,7 @@
 }
 
 .description {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-sm);
   line-height: 1.55;
 }
@@ -43,7 +43,7 @@
 }
 
 .placeholder {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-sm);
   line-height: 1.6;
   max-width: 28rem;

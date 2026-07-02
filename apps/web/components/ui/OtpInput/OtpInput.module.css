@@ -8,7 +8,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  color: var(--color-foreground);
+  color: var(--color-text);
   font-size: var(--font-lg);
   height: 48px;
   text-align: center;

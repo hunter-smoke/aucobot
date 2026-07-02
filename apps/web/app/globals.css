@@ -1,19 +1,25 @@
 :root {
   /* ── Base ─────────────────────────────────────────────────────────────── */
   --color-background: #f3f5fa;
-  --color-foreground: #1e293b;
   --color-surface: #ffffff;
   --color-muted: #eef2f8;
-  --color-muted-foreground: #64748b;
   --color-border: rgba(15, 23, 42, 0.1);
-  /* Hover trung tính — dùng cho MỌI hover trong app. */
-  --color-secondary-hover: rgba(15, 23, 42, 0.05);
+
+  /* ── Text & Icon (dùng chung cho cả chữ và icon) ──────────────────────── */
+  --color-text: #1e293b;
+  --color-description: #70757a;
+  --color-text-muted: var(--color-muted);
+  --color-text-inverse: #f8fafc; /* chữ trên nền tối/màu (trắng) */
+  --color-icon: var(--color-description);
+  --color-icon-muted: var(--color-text-muted);
 
   /* ── Brand (cyan) ─────────────────────────────────────────────────────── */
   /* primary-dim chỉ dùng cho trạng thái đặc biệt (active/selected, badge). */
   --color-primary: #32b8e8;
   --color-primary-hover: #1aa2d3;
-  --color-primary-foreground: #f8fafc;
+  --color-secondary-hover: rgba(15, 23, 42, 0.05);
+  --color-secondary-active: rgba(15, 23, 42, 0.2);
+  --color-primary-foreground: var(--color-text-inverse);
   --color-primary-dim: rgba(50, 184, 232, 0.12);
 
   /* ── Semantic ───────────────────────────────────────────────────────────── */
@@ -30,7 +36,7 @@
   --color-bubble-out: var(--color-primary);
   --color-bubble-out-text: var(--color-primary-foreground);
   --color-bubble-in: var(--color-surface);
-  --color-bubble-in-text: var(--color-foreground);
+  --color-bubble-in-text: var(--color-text);
   --color-composer: var(--color-surface);
 
   /* ── Layout ─────────────────────────────────────────────────────────────── */
@@ -79,16 +85,24 @@
 
 [data-theme="dark"] {
   --color-background: #0b0f17;
-  --color-foreground: #e2e8f0;
   --color-surface: #151b28;
   --color-muted: #111827;
-  --color-muted-foreground: #94a3b8;
   --color-border: rgba(148, 163, 184, 0.14);
   --color-secondary-hover: rgba(255, 255, 255, 0.06);
+  --color-secondary-active: rgba(255, 255, 255, 0.12);
+
+  --color-text: #e2e8f0; /* chính — sáng nhất */
+  --color-description: #94a3b8; /* phụ — nhạt hơn text (mô tả, caption) */
+  --color-text-muted: var(
+    --color-muted
+  ); /* gần nền — disabled / không ấn được */
+  --color-text-inverse: #f8fafc; /* chữ trên nền màu/primary (trắng) */
+  --color-icon: var(--color-description); /* icon mặc định */
+  --color-icon-muted: var(--color-text-muted); /* icon disabled — gần nền */
 
   --color-primary: #1ca8db;
   --color-primary-hover: rgb(76, 202, 248);
-  --color-primary-foreground: #f8fafc;
+  --color-primary-foreground: var(--color-text-inverse);
   --color-primary-dim: rgba(50, 184, 232, 0.15);
 
   --color-danger: #f43f5e;
@@ -99,7 +113,7 @@
   --color-panel: #111827;
   --color-chat: var(--color-background);
   --color-bubble-in: #1c2433;
-  --color-composer: #151b28;
+  --color-composer: var(--color-surface);
 
   color-scheme: dark;
 }
@@ -124,7 +138,7 @@ html:has([data-chat-shell]) body {
 
 body {
   background: var(--color-background);
-  color: var(--color-foreground);
+  color: var(--color-text);
   font-family: var(--font-sans);
   font-size: var(--font-md);
   line-height: 1.5;

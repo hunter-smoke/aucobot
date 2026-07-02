@@ -14,7 +14,7 @@
 }
 
 .icon {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   flex-shrink: 0;
   height: 18px;
   width: 18px;
@@ -23,28 +23,28 @@
 .input {
   background: transparent;
   border: none;
-  color: var(--color-foreground);
+  color: var(--color-text);
   flex: 1;
   min-width: 0;
   outline: none;
 }
 
 .input::placeholder {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
 }
 
 .clear {
   align-items: center;
   background: transparent;
   border: none;
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   display: flex;
   flex-shrink: 0;
   padding: 0;
 }
 
 .clear:hover {
-  color: var(--color-foreground);
+  color: var(--color-text);
 }
 
 .clearIcon {

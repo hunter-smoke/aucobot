@@ -31,7 +31,7 @@
   background: transparent;
   border: none;
   border-radius: var(--radius-md);
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   display: flex;
   height: 44px;
   justify-content: center;
@@ -43,7 +43,7 @@
 
 .navBtn:hover {
   background: var(--color-secondary-hover);
-  color: var(--color-foreground);
+  color: var(--color-text);
 }
 
 .navActive,

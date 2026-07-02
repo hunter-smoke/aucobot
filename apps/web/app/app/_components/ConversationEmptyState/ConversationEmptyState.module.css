@@ -15,7 +15,7 @@
 }
 
 .lead {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-sm);
   line-height: 1.6;
   max-width: 22rem;
@@ -51,5 +51,5 @@
 .btnSecondary {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  color: var(--color-foreground);
+  color: var(--color-text);
 }

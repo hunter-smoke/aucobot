@@ -24,7 +24,7 @@
   background: transparent;
   border: none;
   border-radius: var(--radius-full);
-  color: var(--color-foreground);
+  color: var(--color-text);
   display: flex;
   height: 34px;
   justify-content: center;

@@ -5,14 +5,14 @@
 }
 
 .lead {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-sm);
   line-height: 1.5;
   margin: 0 0 var(--space-6);
 }
 
 .emailHighlight {
-  color: var(--color-foreground);
+  color: var(--color-text);
   font-weight: 600;
 }
 
@@ -70,7 +70,7 @@
 }
 
 .resendHint {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-sm);
   text-align: center;
 }

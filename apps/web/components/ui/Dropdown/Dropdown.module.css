@@ -4,10 +4,12 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 6px;
+  padding: 5px;
   min-width: 180px;
   z-index: 50;
-  animation: slideDown 0.15s ease-out;
+  /* Mở bung từ điểm neo vào trigger (Radix tính sẵn theo side/align). */
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: expandFromTrigger 0.15s ease-out;
   outline: none;
 }
 
@@ -15,7 +17,7 @@
 .item {
   align-items: center;
   border-radius: var(--radius-md);
-  color: var(--color-foreground);
+  color: var(--color-text);
   cursor: pointer;
   display: flex;
   font-size: var(--font-sm);
@@ -67,19 +69,19 @@
 }
 
 .itemExtendDetail {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   flex-shrink: 0;
   font-size: var(--font-md);
 }
 
 .itemExtendChevron {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   flex-shrink: 0;
 }
 
 /* 3. LABEL & SEPARATOR */
 .label {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -94,15 +96,15 @@
 }
 
 /* 4. ANIMATIONS */
-@keyframes slideDown {
+@keyframes expandFromTrigger {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: scale(0.9);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }
 
@@ -111,8 +113,8 @@
   align-items: center;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  color: var(--color-muted-foreground);
+  border-radius: var(--radius-full);
+  color: var(--color-description);
   cursor: pointer;
   display: flex;
   height: 34px;
@@ -125,12 +127,11 @@
 
 .iconTrigger:hover {
   background: var(--color-secondary-hover);
-  color: var(--color-foreground);
 }
 
+/* Đang mở: giữ nền hover, icon giữ màu mặc định (không dùng primary). */
 .iconTrigger[data-state="open"] {
-  background: transparent;
-  color: var(--color-primary);
+  background: var(--color-secondary-hover);
 }
 
 .iconTrigger:focus-visible {
@@ -144,7 +145,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  color: var(--color-foreground);
+  color: var(--color-text);
   cursor: pointer;
   display: inline-flex;
   font-size: var(--font-sm);
@@ -160,7 +161,7 @@
 .defaultTrigger:hover {
   background: var(--color-secondary-hover);
   border-color: var(--color-border);
-  color: var(--color-foreground);
+  color: var(--color-text);
 }
 
 .defaultTrigger[data-state="open"] {

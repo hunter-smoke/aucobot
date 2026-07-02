@@ -15,7 +15,7 @@
 .placeholder {
   align-items: center;
   background: var(--color-panel);
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   display: flex;
   font-size: var(--font-sm);
   height: 100%;

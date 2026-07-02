@@ -6,6 +6,21 @@ import * as React from "react";
 
 import styles from "./Dropdown.module.css";
 
+/**
+ * Theo dõi thao tác gần nhất là bàn phím hay chuột.
+ * Dùng để chỉ hiện focus ring (viền) khi đóng menu bằng bàn phím,
+ * còn đóng bằng chuột thì không trả focus về trigger → không hiện viền.
+ */
+let lastInputWasKeyboard = false;
+if (typeof window !== "undefined") {
+  window.addEventListener("keydown", () => (lastInputWasKeyboard = true), true);
+  window.addEventListener(
+    "pointerdown",
+    () => (lastInputWasKeyboard = false),
+    true,
+  );
+}
+
 /** Bật chế độ single-select cho submenu (hiện dấu tick). */
 const DropdownMenuSubSelectContext = React.createContext(false);
 
@@ -61,24 +76,35 @@ export type DropdownMenuContentProps = React.ComponentPropsWithoutRef<
 export const DropdownMenuContent = React.forwardRef<
   HTMLDivElement,
   DropdownMenuContentProps
->(({ className, sideOffset = 4, width, style, ...props }, ref) => {
-  const widthStyle =
-    width !== undefined
-      ? { minWidth: typeof width === "number" ? `${width}px` : width }
-      : undefined;
+>(
+  (
+    { className, sideOffset = 4, width, style, onCloseAutoFocus, ...props },
+    ref,
+  ) => {
+    const widthStyle =
+      width !== undefined
+        ? { minWidth: typeof width === "number" ? `${width}px` : width }
+        : undefined;
 
-  return (
-    <DropdownMenuPrimitive.Portal>
-      <DropdownMenuPrimitive.Content
-        ref={ref}
-        sideOffset={sideOffset}
-        className={`${styles.content} ${className ?? ""}`.trim()}
-        style={{ ...widthStyle, ...style }}
-        {...props}
-      />
-    </DropdownMenuPrimitive.Portal>
-  );
-});
+    return (
+      <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.Content
+          ref={ref}
+          sideOffset={sideOffset}
+          className={`${styles.content} ${className ?? ""}`.trim()}
+          style={{ ...widthStyle, ...style }}
+          onCloseAutoFocus={(event) => {
+            // Đóng bằng chuột: không trả focus về trigger → không hiện viền.
+            // Đóng bằng bàn phím: giữ mặc định (trả focus + viền) cho a11y.
+            if (!lastInputWasKeyboard) event.preventDefault();
+            onCloseAutoFocus?.(event);
+          }}
+          {...props}
+        />
+      </DropdownMenuPrimitive.Portal>
+    );
+  },
+);
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
 export type DropdownMenuItemProps = React.ComponentPropsWithoutRef<

@@ -8,7 +8,7 @@
 }
 
 .empty {
-  color: var(--color-muted-foreground);
+  color: var(--color-description);
   font-size: var(--font-sm);
   padding: var(--space-6) var(--space-4);
   text-align: center;

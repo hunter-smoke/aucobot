@@ -80,7 +80,7 @@ const DemoLabel = ({ children }: { children: React.ReactNode }) => (
       fontSize: "11px",
       textTransform: "uppercase",
       letterSpacing: "0.05em",
-      color: "var(--color-muted-foreground)",
+      color: "var(--color-description)",
       fontWeight: 600,
       marginBottom: "12px",
     }}
