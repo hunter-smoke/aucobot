@@ -1,17 +1,57 @@
 "use client";
 
-import { useDepartmentIdFromHash } from "@/hooks/thread/use-department-id-from-hash";
+import { useEffect, useState } from "react";
+
+import { useActiveConversation } from "@/hooks/thread/use-active-conversation";
+import { useConversationIdFromHash } from "@/hooks/thread/use-conversation-id-from-hash";
+import { useConversationList } from "@/hooks/thread/use-conversation-list";
+import { ChatMetaPanel } from "../ChatMetaPanel/ChatMetaPanel";
+import { ConversationEmptyState } from "../ConversationEmptyState/ConversationEmptyState";
+import { CreateConversationView } from "../CreateConversationView/CreateConversationView";
 
 import styles from "./ClientAppShell.module.css";
 
-/** Placeholder threads — thay bằng `use-thread-list` khi có API departments. */
-const PLACEHOLDER_THREADS = [
-  { id: "1244557231", title: "Marketing chính" },
-  { id: "9876543210", title: "TikTok campaigns" },
-] as const;
+
+import type { ConversationType } from "@aucobot/shared";
+
+type CreateView = "room" | "session" | null;
 
 export function ClientAppShell({ userName }: { userName: string }) {
-  const { departmentId, openDepartment } = useDepartmentIdFromHash();
+  const { conversationId, openConversation, clearConversation } =
+    useConversationIdFromHash();
+  const { items, loading, error, refetch } = useConversationList();
+  const {
+    conversation,
+    loading: activeLoading,
+    error: activeError,
+  } = useActiveConversation(conversationId);
+  const [createView, setCreateView] = useState<CreateView>(null);
+
+  useEffect(() => {
+    if (activeError && conversationId) {
+      clearConversation();
+    }
+  }, [activeError, conversationId, clearConversation]);
+
+  useEffect(() => {
+    if (conversationId) {
+      setCreateView(null);
+    }
+  }, [conversationId]);
+
+  function startCreate(type: ConversationType) {
+    clearConversation();
+    setCreateView(type);
+  }
+
+  function handleCreated(id: string) {
+    void refetch();
+    openConversation(id);
+    setCreateView(null);
+  }
+
+  const showEmptyMain =
+    !conversationId && !createView && !loading && items.length === 0;
 
   return (
     <div className={styles.shell} data-chat-shell>
@@ -19,20 +59,51 @@ export function ClientAppShell({ userName }: { userName: string }) {
         <header className={styles.panelHeader}>
           <p className={styles.panelEyebrow}>Aucobot</p>
           <p className={styles.panelUser}>{userName}</p>
+          <div className={styles.panelActions}>
+            <button
+              type="button"
+              className={styles.actionBtn}
+              onClick={() => startCreate("room")}
+            >
+              Tạo phòng
+            </button>
+            <button
+              type="button"
+              className={styles.actionBtnSecondary}
+              onClick={() => startCreate("session")}
+            >
+              Phiên mới
+            </button>
+          </div>
         </header>
 
+        {error && (
+          <p className={styles.listError} role="alert">
+            {error}
+          </p>
+        )}
+
         <ul className={styles.threadList}>
-          {PLACEHOLDER_THREADS.map((thread) => {
-            const active = departmentId === thread.id;
+          {loading && items.length === 0 ? (
+            <li className={styles.listHint}>Đang tải…</li>
+          ) : null}
+          {items.map((thread) => {
+            const active = conversationId === thread.id;
 
             return (
               <li key={thread.id}>
                 <button
                   type="button"
                   className={active ? styles.threadActive : styles.threadItem}
-                  onClick={() => openDepartment(thread.id)}
+                  onClick={() => {
+                    setCreateView(null);
+                    openConversation(thread.id);
+                  }}
                 >
-                  {thread.title}
+                  <span className={styles.threadType}>
+                    {thread.type === "room" ? "Phòng" : "Phiên"}
+                  </span>
+                  <span className={styles.threadTitle}>{thread.title}</span>
                 </button>
               </li>
             );
@@ -41,26 +112,31 @@ export function ClientAppShell({ userName }: { userName: string }) {
       </aside>
 
       <section className={styles.chat}>
-        {departmentId ? (
-          <>
-            <header className={styles.chatHeader}>
-              <h1 className={styles.chatTitle}>Department {departmentId}</h1>
-            </header>
-            <div className={styles.chatBody}>
-              <p className={styles.chatPlaceholder}>
-                Message list + composer sẽ mount ở đây.
-              </p>
-            </div>
-          </>
-        ) : (
+        {createView ? (
+          <CreateConversationView
+            type={createView}
+            onBack={() => setCreateView(null)}
+            onCreated={(created) => handleCreated(created.id)}
+          />
+        ) : showEmptyMain ? (
+          <ConversationEmptyState
+            onCreateRoom={() => startCreate("room")}
+            onCreateSession={() => startCreate("session")}
+          />
+        ) : conversationId && activeLoading ? (
           <div className={styles.chatEmpty}>
-            <p className={styles.chatEmptyTitle}>Chọn một phòng chat</p>
+            <p className={styles.chatEmptyLead}>Đang tải…</p>
+          </div>
+        ) : conversation ? (
+          <ChatMetaPanel conversation={conversation} />
+        ) : !conversationId && items.length > 0 ? (
+          <div className={styles.chatEmpty}>
+            <p className={styles.chatEmptyTitle}>Chọn một cuộc trò chuyện</p>
             <p className={styles.chatEmptyLead}>
-              Chọn phòng bên trái hoặc mở link{" "}
-              <code className={styles.hashExample}>#1244557231</code>
+              Chọn phòng hoặc phiên bên trái để bắt đầu.
             </p>
           </div>
-        )}
+        ) : null}
       </section>
     </div>
   );

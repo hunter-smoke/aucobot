@@ -1,15 +1,16 @@
-# `app/app/` — Chat shell (`app.aucobot.com`)
+# `app/app/` — Chat shell (`app.aucobot.com` / dev `localhost:8386/app`)
 
-Một route `/` — phòng chat chọn qua **hash** (giống Telegram Web A).
+App chat **kiểu Telegram** — user trò chuyện với AI. Một route `/app` — chọn hội thoại qua **hash**.
 
 ## URL
 
 | URL | Mô tả |
 |-----|--------|
-| `app.aucobot.com/` | Shell: list thread, chưa chọn phòng |
-| `app.aucobot.com/#1244557231` | Chat department `1244557231` |
+| `…/app` | Shell: empty state hoặc chưa chọn chat |
+| `…/app#clx9abc` | Mở **Conversation** (Room hoặc Session) |
 
-Không dùng `/c/[departmentId]`.
+**Room (Phòng):** group-like — tên + mô tả tùy chọn, giống Telegram New Channel.  
+**Session (Phiên):** chat 1 việc cụ thể với AI.
 
 ## Files
 
@@ -17,16 +18,27 @@ Không dùng `/c/[departmentId]`.
 app/app/
   layout.tsx
   page.tsx                          # RSC auth guard → ClientAppShell
-  _components/ClientAppShell/         # 2 cột: panel + chat
+  _components/
+    ClientAppShell/                   # Sidebar + main panel
+    ConversationEmptyState/
+    CreateConversationView/
+    ChatMetaPanel/
 ```
 
-## Hash routing
+## Hash routing — ✅
 
-- `hooks/thread/use-department-id-from-hash.ts`
-- `utils/chat/department-hash.ts`
+- `hooks/thread/use-conversation-id-from-hash.ts`
+- `utils/chat/conversation-hash.ts`
 
-## Sau này
+## Phase 1 — ✅
 
-- `use-thread-list` → thay placeholder threads
-- `components/chat/*` + `components/layout/Composer` trong panel chat
-- WebSocket reconnect khi `hashchange`
+- Empty state + **Tạo phòng** / **Phiên mới** (form Telegram-style)
+- `use-conversation-list` → `GET /api/conversations`
+- `use-active-conversation` → `GET /api/conversations/:id`
+- Meta panel placeholder (chưa có tin nhắn / composer)
+
+## Phase 2+ — 🔜
+
+- Message model, composer, AI agent, WebSocket
+
+Xem [`aucobot-architecture.md`](../../../../aucobot-architecture.md).

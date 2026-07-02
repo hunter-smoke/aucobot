@@ -1,17 +1,20 @@
 :root {
   /* ── Base ─────────────────────────────────────────────────────────────── */
-  --color-background: #f4f6fb;
+  --color-background: #f3f5fa;
   --color-foreground: #1e293b;
   --color-surface: #ffffff;
   --color-muted: #eef2f8;
   --color-muted-foreground: #64748b;
   --color-border: rgba(15, 23, 42, 0.1);
+  /* Hover trung tính — dùng cho MỌI hover trong app. */
+  --color-secondary-hover: rgba(15, 23, 42, 0.05);
 
-  /* ── Brand (blue) ─────────────────────────────────────────────────────── */
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
+  /* ── Brand (cyan) ─────────────────────────────────────────────────────── */
+  /* primary-dim chỉ dùng cho trạng thái đặc biệt (active/selected, badge). */
+  --color-primary: #32b8e8;
+  --color-primary-hover: #1aa2d3;
   --color-primary-foreground: #f8fafc;
-  --color-primary-dim: rgba(37, 99, 235, 0.12);
+  --color-primary-dim: rgba(50, 184, 232, 0.12);
 
   /* ── Semantic ───────────────────────────────────────────────────────────── */
   --color-danger: #e11d48;
@@ -21,8 +24,8 @@
 
   /* ── Chat (Telegram-style) ──────────────────────────────────────────────── */
   --color-panel: #eef2f8;
+  --color-sidebar: #f7f7f4;
   --color-chat: var(--color-background);
-  --color-thread-hover: rgba(37, 99, 235, 0.06);
   --color-thread-active: var(--color-primary-dim);
   --color-bubble-out: var(--color-primary);
   --color-bubble-out-text: var(--color-primary-foreground);
@@ -31,7 +34,9 @@
   --color-composer: var(--color-surface);
 
   /* ── Layout ─────────────────────────────────────────────────────────────── */
-  --sidebar-width: 22rem;
+  --rail-width: 4.5rem;
+  --sidebar-main-width: 18rem;
+  --sidebar-width: calc(var(--rail-width) + var(--sidebar-main-width));
   --header-height: 3.5rem;
   --composer-min-height: 3.25rem;
 
@@ -45,12 +50,16 @@
   --space-12: 3rem;
 
   /* ── Radius ─────────────────────────────────────────────────────────────── */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
   --radius-full: 999px;
 
   /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-sans:
+    var(--font-be-vietnam, "Be Vietnam Pro"), system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
   --font-xs: 12px;
   --font-sm: 13px;
   --font-md: 14px;
@@ -63,6 +72,7 @@
   --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
   --focus-ring: 0 0 0 2px var(--color-primary);
   --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.12);
 
   color-scheme: light;
 }
@@ -74,11 +84,12 @@
   --color-muted: #111827;
   --color-muted-foreground: #94a3b8;
   --color-border: rgba(148, 163, 184, 0.14);
+  --color-secondary-hover: rgba(255, 255, 255, 0.06);
 
-  --color-primary: #3b82f6;
-  --color-primary-hover: #60a5fa;
+  --color-primary: #1ca8db;
+  --color-primary-hover: rgb(76, 202, 248);
   --color-primary-foreground: #f8fafc;
-  --color-primary-dim: rgba(59, 130, 246, 0.15);
+  --color-primary-dim: rgba(50, 184, 232, 0.15);
 
   --color-danger: #f43f5e;
   --color-danger-dim: rgba(244, 63, 94, 0.12);
@@ -87,7 +98,6 @@
 
   --color-panel: #111827;
   --color-chat: var(--color-background);
-  --color-thread-hover: rgba(59, 130, 246, 0.08);
   --color-bubble-in: #1c2433;
   --color-composer: #151b28;
 
@@ -115,11 +125,7 @@ html:has([data-chat-shell]) body {
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--font-md);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;

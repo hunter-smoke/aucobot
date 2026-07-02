@@ -1,6 +1,6 @@
-/** App subdomain — chat + auth (`app.aucobot.com`). */
+/** App entry — prod: `app.aucobot.com`; dev: `http://localhost:8386/app`. */
 export function getAppOrigin(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://app.localhost:8386";
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:8386/app";
 }
 
 /** Marketing root domain (`aucobot.com`). */

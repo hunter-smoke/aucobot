@@ -27,6 +27,7 @@ function readEnv(): EnvConfig {
     EMAIL_OTP_IP_MAX_REQUESTS: process.env.EMAIL_OTP_IP_MAX_REQUESTS,
     EMAIL_OTP_IP_WINDOW_SECONDS: process.env.EMAIL_OTP_IP_WINDOW_SECONDS,
     EMAIL_OTP_HMAC_SECRET: process.env.EMAIL_OTP_HMAC_SECRET,
+    ENABLED_FEATURES: process.env.ENABLED_FEATURES,
   });
 }
 
@@ -60,6 +61,7 @@ export const appConfig = () => {
     emailOtpIpMaxRequests: env.EMAIL_OTP_IP_MAX_REQUESTS,
     emailOtpIpWindowSeconds: env.EMAIL_OTP_IP_WINDOW_SECONDS,
     emailOtpHmacSecret: env.EMAIL_OTP_HMAC_SECRET ?? env.JWT_SECRET,
+    enabledFeatures: env.ENABLED_FEATURES,
   };
 };
 

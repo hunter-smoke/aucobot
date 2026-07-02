@@ -1,0 +1,227 @@
+/* ==========================================================================
+   SIDEBAR — base layout & structure
+   ========================================================================== */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width, 240px);
+  background: var(--color-sidebar-background, #f3f3f3);
+  border-right: 1px solid var(--color-sidebar-border, rgb(229, 231, 235));
+  height: 100%;
+  max-height: 100dvh;
+  flex-shrink: 0;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.sidebarCollapsed {
+  width: var(--sidebar-collapsed-width, 64px);
+}
+
+.sidebarCollapsed .header {
+  justify-content: center;
+}
+
+.sidebarCollapsed .brand {
+  display: none;
+}
+
+/* ==========================================================================
+   HEADER & LOGO
+   ========================================================================== */
+
+.header {
+  height: var(--header-height, 64px);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-sidebar-border, rgb(229, 231, 235));
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  flex: 1;
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--color-sidebar-active, #ffffff);
+}
+
+.logoIcon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.logoText {
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+  margin-top: 3px;
+}
+
+/* ==========================================================================
+   COLLAPSE BUTTON
+   ========================================================================== */
+
+.collapseBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--color-muted-foreground, #a0aec0);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.collapseIcon {
+  transition: transform 0.2s ease;
+}
+
+.collapseIconRotated {
+  transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+
+.navWrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.navWrap::-webkit-scrollbar {
+  display: none;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 10px;
+  color: var(--color-sidebar-primary, rgb(120, 120, 120));
+  text-decoration: none;
+  border-radius: 6px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    padding 0.2s ease;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.navItemActive {
+  background: var(--color-sidebar-active-background, rgba(255, 95, 0, 0.12));
+  color: var(--color-sidebar-active, #ff5f00);
+}
+
+.navItemActive .navText {
+  font-weight: 500;
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.navText {
+  margin-left: 16px;
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  white-space: nowrap;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.navTextHidden {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.footer {
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-3);
+  border-top: 1px solid var(--color-sidebar-border, #2c2d30);
+}
+
+/* ==========================================================================
+   HOVER — interactive feedback (grouped for easy tuning)
+   ========================================================================== */
+
+.collapseBtn:hover {
+  background: var(--color-sidebar-hover, #2c2d30);
+  color: var(--color-sidebar-active, #ffffff);
+}
+
+.navItem:hover:not(.navItemActive) {
+  background: var(--color-sidebar-hover, rgba(255, 95, 0, 0.06));
+  color: var(--color-sidebar-active, #ffffff);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: var(--sidebar-collapsed-width, 64px);
+  }
+
+  .header {
+    justify-content: center;
+  }
+
+  .brand {
+    display: none;
+  }
+
+  .navText {
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}

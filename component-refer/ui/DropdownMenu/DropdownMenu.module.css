@@ -1,0 +1,176 @@
+/* 1. MENU CONTAINER (CONTENT) */
+.content {
+  background: var(--color-dropdown-background);
+  border: 1px solid var(--color-dropdown-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  min-width: 160px;
+  z-index: 50;
+  animation: slideDown 0.15s ease-out;
+  outline: none;
+}
+
+/* 2. MENU ITEM */
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-dropdown-foreground);
+  cursor: pointer;
+  outline: none;
+  transition: background var(--transition-fast) ease;
+  user-select: none;
+}
+
+.itemSelectable {
+  position: relative;
+  padding-right: 32px;
+}
+
+.itemIndicator {
+  position: absolute;
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  color: currentColor;
+}
+
+/* Hover state*/
+.item:hover,
+.item[data-highlighted] {
+  background: var(--color-primary-dim);
+}
+
+/* Item danger */
+.item.danger {
+  color: var(--color-danger);
+}
+
+.item.danger:hover,
+.item.danger[data-highlighted] {
+  background: var(--color-danger-dim);
+}
+
+.itemExtend {
+  width: 100%;
+}
+
+.itemExtendMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.itemExtendDetail {
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted-foreground);
+}
+
+.itemExtendChevron {
+  flex-shrink: 0;
+  color: var(--color-muted-foreground);
+}
+
+/* 3. LABEL & SEPARATOR */
+.label {
+  padding: 8px 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.separator {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: var(--space-1) 0;
+}
+
+/* 4. ANIMATIONS */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 5. TRIGGER (Kebab Button) */
+.kebabTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast) ease,
+    color var(--transition-fast) ease;
+}
+
+.kebabTrigger:hover {
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+}
+
+.kebabTrigger[data-state="open"] {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.kebabTrigger:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* 6. DEFAULT TRIGGER */
+.defaultTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast) ease,
+    border-color var(--transition-fast) ease;
+}
+
+.defaultTrigger:hover {
+  background: var(--color-dropdown-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.defaultTrigger[data-state="open"] {
+  background: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.defaultTrigger:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

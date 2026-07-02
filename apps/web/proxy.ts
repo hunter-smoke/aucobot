@@ -18,6 +18,10 @@ function isStaticAsset(pathname: string): boolean {
   );
 }
 
+function isAppPath(pathname: string): boolean {
+  return pathname === APP_ROUTE_PREFIX || pathname.startsWith(`${APP_ROUTE_PREFIX}/`);
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -31,11 +35,22 @@ export function proxy(request: NextRequest) {
     onAppHost &&
     SITE_ONLY_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
   ) {
-    return NextResponse.redirect(marketingUrl(pathname));
+    const target = marketingUrl(pathname);
+    const requestHost = request.headers.get("host") ?? "";
+    const targetHost = new URL(target).host;
+
+    // Misconfigured MARKETING_URL on app host → avoid redirect loop; serve /site/* instead.
+    if (targetHost === requestHost) {
+      const url = request.nextUrl.clone();
+      url.pathname = `${SITE_ROUTE_PREFIX}${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
+    return NextResponse.redirect(target);
   }
 
   if (onAppHost) {
-    if (pathname.startsWith(APP_ROUTE_PREFIX)) {
+    if (isAppPath(pathname)) {
       return NextResponse.next();
     }
 
@@ -43,6 +58,11 @@ export function proxy(request: NextRequest) {
     url.pathname =
       pathname === "/" ? APP_ROUTE_PREFIX : `${APP_ROUTE_PREFIX}${pathname}`;
     return NextResponse.rewrite(url);
+  }
+
+  // Dev: app at localhost:8386/app (same host as login — cookies work across ports).
+  if (isAppPath(pathname)) {
+    return NextResponse.next();
   }
 
   if (pathname.startsWith(SITE_ROUTE_PREFIX)) {

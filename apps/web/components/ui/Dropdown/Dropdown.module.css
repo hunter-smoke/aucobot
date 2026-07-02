@@ -1,0 +1,175 @@
+/* 1. MENU CONTAINER (CONTENT) */
+.content {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  min-width: 180px;
+  z-index: 50;
+  animation: slideDown 0.15s ease-out;
+  outline: none;
+}
+
+/* 2. MENU ITEM */
+.item {
+  align-items: center;
+  border-radius: var(--radius-md);
+  color: var(--color-foreground);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  gap: var(--space-3);
+  outline: none;
+  padding: 6px 14px;
+  transition: background var(--transition);
+  user-select: none;
+}
+
+.itemSelectable {
+  padding-right: 32px;
+  position: relative;
+}
+
+.itemIndicator {
+  align-items: center;
+  color: currentColor;
+  display: inline-flex;
+  position: absolute;
+  right: var(--space-2);
+}
+
+.item:hover,
+.item[data-highlighted] {
+  background: var(--color-secondary-hover);
+}
+
+.item.danger {
+  color: var(--color-danger);
+}
+
+.item.danger:hover,
+.item.danger[data-highlighted] {
+  background: var(--color-danger-dim);
+}
+
+.itemExtend {
+  width: 100%;
+}
+
+.itemExtendMain {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.itemExtendDetail {
+  color: var(--color-muted-foreground);
+  flex-shrink: 0;
+  font-size: var(--font-md);
+}
+
+.itemExtendChevron {
+  color: var(--color-muted-foreground);
+  flex-shrink: 0;
+}
+
+/* 3. LABEL & SEPARATOR */
+.label {
+  color: var(--color-muted-foreground);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.separator {
+  background-color: var(--color-border);
+  height: 1px;
+  margin: var(--space-1) 0;
+}
+
+/* 4. ANIMATIONS */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 5. TRIGGER (Icon button — icon truyền qua children, không cố định) */
+.iconTrigger {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  transition:
+    background var(--transition),
+    color var(--transition);
+  width: 34px;
+}
+
+.iconTrigger:hover {
+  background: var(--color-secondary-hover);
+  color: var(--color-foreground);
+}
+
+.iconTrigger[data-state="open"] {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.iconTrigger:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+/* 6. DEFAULT TRIGGER */
+.defaultTrigger {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-foreground);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  justify-content: center;
+  line-height: 1;
+  padding: 8px 12px;
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.defaultTrigger:hover {
+  background: var(--color-secondary-hover);
+  border-color: var(--color-border);
+  color: var(--color-foreground);
+}
+
+.defaultTrigger[data-state="open"] {
+  background: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.defaultTrigger:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}

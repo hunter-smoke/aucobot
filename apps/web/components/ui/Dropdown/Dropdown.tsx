@@ -1,0 +1,232 @@
+"use client";
+
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
+import * as React from "react";
+
+import styles from "./Dropdown.module.css";
+
+/** Bật chế độ single-select cho submenu (hiện dấu tick). */
+const DropdownMenuSubSelectContext = React.createContext(false);
+
+function useDropdownMenuSubSelect() {
+  return React.useContext(DropdownMenuSubSelectContext);
+}
+
+export const DropdownMenu = DropdownMenuPrimitive.Root;
+
+export type DropdownMenuTriggerProps =
+  DropdownMenuPrimitive.DropdownMenuTriggerProps & {
+    /**
+     * Kiểu nút mở menu:
+     * - `default`: nút có viền + nhãn chữ.
+     * - `icon`: nút-icon vuông (icon tự truyền qua children, KHÔNG cố định icon nào).
+     * - `unstyled`: không style, tự tùy biến hoàn toàn.
+     */
+    variant?: "default" | "icon" | "unstyled";
+    children?: React.ReactNode;
+  };
+
+export const DropdownMenuTrigger = React.forwardRef<
+  HTMLButtonElement,
+  DropdownMenuTriggerProps
+>(({ className, variant = "default", children, style, ...props }, ref) => {
+  const variantClass =
+    variant === "icon"
+      ? styles.iconTrigger
+      : variant === "default"
+        ? styles.defaultTrigger
+        : "";
+
+  return (
+    <DropdownMenuPrimitive.Trigger
+      ref={ref}
+      className={`${variantClass} ${className ?? ""}`.trim()}
+      style={style}
+      {...props}
+    >
+      {children}
+    </DropdownMenuPrimitive.Trigger>
+  );
+});
+DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
+
+export type DropdownMenuContentProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.Content
+> & {
+  /** Chiều rộng tối thiểu của menu (number = px, string = CSS length). */
+  width?: number | string;
+};
+
+export const DropdownMenuContent = React.forwardRef<
+  HTMLDivElement,
+  DropdownMenuContentProps
+>(({ className, sideOffset = 4, width, style, ...props }, ref) => {
+  const widthStyle =
+    width !== undefined
+      ? { minWidth: typeof width === "number" ? `${width}px` : width }
+      : undefined;
+
+  return (
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.Content
+        ref={ref}
+        sideOffset={sideOffset}
+        className={`${styles.content} ${className ?? ""}`.trim()}
+        style={{ ...widthStyle, ...style }}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
+  );
+});
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
+
+export type DropdownMenuItemProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.Item
+> & {
+  variant?: "default" | "danger";
+  /** Hiện dấu tick khi được chọn (dùng trong `DropdownMenuSub select`). */
+  selected?: boolean;
+};
+
+export const DropdownMenuItem = React.forwardRef<
+  HTMLDivElement,
+  DropdownMenuItemProps
+>(
+  (
+    { className, variant = "default", selected, asChild, children, ...props },
+    ref,
+  ) => {
+    const subSelect = useDropdownMenuSubSelect();
+    const isSelectable = subSelect && selected !== undefined && !asChild;
+
+    return (
+      <DropdownMenuPrimitive.Item
+        ref={ref}
+        asChild={asChild}
+        className={`${styles.item} ${isSelectable ? styles.itemSelectable : ""} ${
+          variant === "danger" ? styles.danger : ""
+        } ${className ?? ""}`.trim()}
+        aria-checked={isSelectable ? selected : undefined}
+        {...props}
+      >
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {children}
+            {isSelectable && selected ? (
+              <span className={styles.itemIndicator} aria-hidden>
+                <CheckIcon width={16} height={16} />
+              </span>
+            ) : null}
+          </>
+        )}
+      </DropdownMenuPrimitive.Item>
+    );
+  },
+);
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
+
+export const DropdownMenuLabel = React.forwardRef<
+  HTMLDivElement,
+  DropdownMenuPrimitive.DropdownMenuLabelProps
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Label
+    ref={ref}
+    className={`${styles.label} ${className ?? ""}`.trim()}
+    {...props}
+  />
+));
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
+
+export const DropdownMenuSeparator = React.forwardRef<
+  HTMLDivElement,
+  DropdownMenuPrimitive.DropdownMenuSeparatorProps
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Separator
+    ref={ref}
+    className={`${styles.separator} ${className ?? ""}`.trim()}
+    {...props}
+  />
+));
+DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
+
+export type DropdownMenuSubProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.Sub
+> & {
+  /** Submenu single-select — item con dùng `selected` để hiện tick. Mặc định false. */
+  select?: boolean;
+};
+
+export function DropdownMenuSub({
+  select = false,
+  children,
+  ...props
+}: DropdownMenuSubProps) {
+  return (
+    <DropdownMenuSubSelectContext.Provider value={select}>
+      <DropdownMenuPrimitive.Sub {...props}>
+        {children}
+      </DropdownMenuPrimitive.Sub>
+    </DropdownMenuSubSelectContext.Provider>
+  );
+}
+
+export type DropdownMenuSubContentProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.SubContent
+> & {
+  width?: number | string;
+};
+
+export const DropdownMenuSubContent = React.forwardRef<
+  HTMLDivElement,
+  DropdownMenuSubContentProps
+>(({ className, sideOffset = 4, width, style, ...props }, ref) => {
+  const widthStyle =
+    width !== undefined
+      ? { minWidth: typeof width === "number" ? `${width}px` : width }
+      : undefined;
+
+  return (
+    <DropdownMenuPrimitive.SubContent
+      ref={ref}
+      sideOffset={sideOffset}
+      className={`${styles.content} ${className ?? ""}`.trim()}
+      style={{ ...widthStyle, ...style }}
+      {...props}
+    />
+  );
+});
+DropdownMenuSubContent.displayName =
+  DropdownMenuPrimitive.SubContent.displayName;
+
+export type DropdownMenuSubItemProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuPrimitive.SubTrigger
+> & {
+  /** Nhãn phụ trước chevron (vd "Light"). */
+  detail?: React.ReactNode;
+};
+
+export const DropdownMenuSubItem = React.forwardRef<
+  HTMLDivElement,
+  DropdownMenuSubItemProps
+>(({ className, children, detail, ...props }, ref) => (
+  <DropdownMenuPrimitive.SubTrigger
+    ref={ref}
+    className={`${styles.item} ${styles.itemExtend} ${className ?? ""}`.trim()}
+    {...props}
+  >
+    <span className={styles.itemExtendMain}>{children}</span>
+    {detail != null && detail !== "" ? (
+      <span className={styles.itemExtendDetail}>{detail}</span>
+    ) : null}
+    <ChevronRightIcon
+      width={16}
+      height={16}
+      className={styles.itemExtendChevron}
+      aria-hidden
+    />
+  </DropdownMenuPrimitive.SubTrigger>
+));
+DropdownMenuSubItem.displayName = "DropdownMenuSubItem";

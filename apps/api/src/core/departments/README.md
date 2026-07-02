@@ -1,5 +1,5 @@
-# Departments
+# Conversations (placeholder folder: `departments/`)
 
-> **Planned** — chưa implement. Giữ cấu trúc thư mục; triển khai khi được yêu cầu.
+> **🔜 Planned** — chưa implement. Tên cũ `departments` → **`Conversation`** với `type: room | session`.
 
-Xem `aucobot-architecture.md`.
+Xem [`aucobot-architecture.md`](../../../../aucobot-architecture.md) — mục **Chat Telegram-style với AI**.

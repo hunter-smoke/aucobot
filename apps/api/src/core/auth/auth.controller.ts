@@ -164,10 +164,9 @@ export class AuthController {
     const tokens = await this.authService.issueTokenPair(user);
     setAuthCookies(res, tokens, this.getCookieMaxAge());
 
-    const webOrigin = this.configService.get<string>(
-      "webOrigin",
-      `http://localhost:${WEB_DEFAULT_PORT}`,
-    );
+    const webOrigin = this.configService
+      .get<string>("webOrigin", `http://localhost:${WEB_DEFAULT_PORT}`)
+      .replace(/\/$/, "");
     res.redirect(`${webOrigin}/`);
   }
 

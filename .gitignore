@@ -14,3 +14,6 @@ package-lock.json
 npm-shrinkwrap.json
 yarn.lock
 .pnp.*
+
+*storybook.log
+storybook-static

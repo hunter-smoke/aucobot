@@ -46,6 +46,12 @@ async function bootstrap() {
   await app.listen(port);
   loggingService.log(`API running on http://localhost:${port}/api`, "Bootstrap");
 
+  const enabledFeatures = config.get<string[]>("enabledFeatures", []);
+  loggingService.log(
+    `Enabled features: ${enabledFeatures.length ? enabledFeatures.join(", ") : "(none)"}`,
+    "Bootstrap",
+  );
+
   if (swaggerEnabled) {
     loggingService.log(
       `Swagger UI at http://localhost:${port}/${SWAGGER_PATH}`,

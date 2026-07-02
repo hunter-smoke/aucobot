@@ -4,6 +4,7 @@ Design system nội bộ — CSS Modules, không Tailwind/shadcn.
 
 ## Implemented
 
+- `Avatar/` — chữ cái đầu + màu nền ổn định theo `seed` (chat sidebar + bubble)
 - `StatusBadge/` — health / online indicator
 - `OtpInput/`
 

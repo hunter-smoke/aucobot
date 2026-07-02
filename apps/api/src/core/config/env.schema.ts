@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { FEATURE_IDS } from "../features/feature.constants";
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   DATABASE_URL: z.string().min(1),
@@ -41,6 +43,17 @@ export const envSchema = z.object({
   EMAIL_OTP_IP_MAX_REQUESTS: z.coerce.number().int().positive().default(10),
   EMAIL_OTP_IP_WINDOW_SECONDS: z.coerce.number().int().positive().default(600),
   EMAIL_OTP_HMAC_SECRET: z.string().min(16).optional(),
+  /** CSV các feature bật, vd `facebook,publishing`. Rỗng ở MVP. Id lạ → lỗi boot. */
+  ENABLED_FEATURES: z
+    .string()
+    .default("")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.enum(FEATURE_IDS))),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

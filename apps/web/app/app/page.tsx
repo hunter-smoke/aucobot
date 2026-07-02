@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { ClientAppShell } from "./_components/ClientAppShell/ClientAppShell";
 import { marketingUrl } from "@/lib/host/urls";
 import { getServerUser } from "@/lib/http/server-auth";
+import { ClientAppShell } from "./_components/ClientAppShell/ClientAppShell";
 
 export default async function AppHomePage() {
   const user = await getServerUser();

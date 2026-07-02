@@ -1,4 +1,15 @@
 export {
+  conversationListResponseSchema,
+  conversationResponseSchema,
+  conversationTypeSchema,
+  createConversationSchema,
+  type ConversationListResponse,
+  type ConversationResponse,
+  type ConversationType,
+  type CreateConversationInput,
+} from "./conversations";
+
+export {
   emailOtpPurposeSchema,
   resendEmailCodeSchema,
   sendEmailCodeSchema,

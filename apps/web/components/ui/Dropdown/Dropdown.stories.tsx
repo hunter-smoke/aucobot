@@ -1,0 +1,392 @@
+import {
+  ArrowRightStartOnRectangleIcon,
+  Cog6ToothIcon,
+  EllipsisHorizontalIcon,
+  EllipsisVerticalIcon,
+  MoonIcon,
+  PlusIcon,
+  QuestionMarkCircleIcon,
+  SunIcon,
+  UserIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
+import React from "react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/Dropdown/Dropdown";
+
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+
+const meta: Meta = {
+  title: "UI/Dropdown",
+  component: DropdownMenu,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+  argTypes: {
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "Căn vị trí menu so với trigger",
+    },
+    triggerVariant: {
+      control: "select",
+      options: ["default", "icon", "unstyled"],
+      description: "Kiểu nút mở menu (icon = nút-icon, icon tùy truyền)",
+    },
+    triggerText: {
+      control: "text",
+      description: "Nhãn trigger (chỉ variant default)",
+    },
+    sideOffset: {
+      control: "number",
+      description: "Khoảng cách giữa menu và trigger (px)",
+    },
+    contentWidth: {
+      control: { type: "number", min: 120, max: 400, step: 10 },
+      description: "Chiều rộng tối thiểu của menu (px)",
+    },
+    subContentWidth: {
+      control: { type: "number", min: 120, max: 400, step: 10 },
+      description: "Chiều rộng tối thiểu của submenu (px)",
+    },
+    select: {
+      control: "boolean",
+      description: "DropdownMenuSub — submenu single-select (dấu tick)",
+    },
+    theme: {
+      control: "select",
+      options: ["light", "dark", "system"],
+      description: "Giá trị đang chọn trong submenu Appearance",
+    },
+  },
+};
+
+export default meta;
+
+const DemoLabel = ({ children }: { children: React.ReactNode }) => (
+  <p
+    style={{
+      fontSize: "11px",
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+      color: "var(--color-muted-foreground)",
+      fontWeight: 600,
+      marginBottom: "12px",
+    }}
+  >
+    {children}
+  </p>
+);
+
+const DemoBox = ({ children }: { children: React.ReactNode }) => (
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: "16px",
+      padding: "60px",
+      minWidth: "300px",
+      border: "1px dashed var(--color-border)",
+      borderRadius: "var(--radius-md)",
+      background: "var(--color-background)",
+      alignItems: "center",
+    }}
+  >
+    {children}
+  </div>
+);
+
+const iconSize = 18;
+const iconProps = {
+  width: iconSize,
+  height: iconSize,
+  strokeWidth: 2,
+  "aria-hidden": true,
+} as const;
+
+type CustomStoryArgs = {
+  align: "start" | "center" | "end";
+  triggerVariant: "default" | "icon" | "unstyled";
+  triggerText: string;
+  sideOffset: number;
+  contentWidth: number;
+};
+
+export const Default: StoryObj<CustomStoryArgs> = {
+  args: {
+    align: "end",
+    triggerVariant: "default",
+    triggerText: "Options",
+    sideOffset: 4,
+    contentWidth: 180,
+  },
+  render: (args) => (
+    <div>
+      <DemoLabel>Bấm nút để mở menu (hover đổi nền và màu chữ)</DemoLabel>
+      <DemoBox>
+        <DropdownMenu>
+          <DropdownMenuTrigger variant={args.triggerVariant}>
+            {args.triggerVariant === "icon" ? (
+              <EllipsisHorizontalIcon width={20} height={20} strokeWidth={2} />
+            ) : (
+              args.triggerText
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align={args.align}
+            sideOffset={args.sideOffset}
+            width={args.contentWidth}
+          >
+            <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Hồ sơ</DropdownMenuItem>
+            <DropdownMenuItem>Cài đặt</DropdownMenuItem>
+            <DropdownMenuItem>Nhóm</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="danger">Đăng xuất</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </DemoBox>
+    </div>
+  ),
+};
+
+export const IconTrigger: StoryObj<
+  Pick<CustomStoryArgs, "align" | "contentWidth" | "sideOffset">
+> = {
+  args: {
+    align: "end",
+    sideOffset: 4,
+    contentWidth: 180,
+  },
+  render: (args) => {
+    const menu = (
+      <DropdownMenuContent
+        align={args.align}
+        sideOffset={args.sideOffset}
+        width={args.contentWidth}
+      >
+        <DropdownMenuItem>Sửa</DropdownMenuItem>
+        <DropdownMenuItem>Sao chép ID</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="danger">Xóa vĩnh viễn</DropdownMenuItem>
+      </DropdownMenuContent>
+    );
+
+    return (
+      <div>
+        <DemoLabel>
+          Variant `icon` chỉ là nút-icon — icon truyền qua children nên đổi tùy
+          ý (ba chấm ngang/dọc, cộng, bánh răng...)
+        </DemoLabel>
+        <DemoBox>
+          <div style={{ display: "flex", gap: 12 }}>
+            <DropdownMenu>
+              <DropdownMenuTrigger variant="icon" aria-label="Ba chấm ngang">
+                <EllipsisHorizontalIcon
+                  width={20}
+                  height={20}
+                  strokeWidth={2}
+                />
+              </DropdownMenuTrigger>
+              {menu}
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger variant="icon" aria-label="Ba chấm dọc">
+                <EllipsisVerticalIcon width={20} height={20} strokeWidth={2} />
+              </DropdownMenuTrigger>
+              {menu}
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger variant="icon" aria-label="Thêm">
+                <PlusIcon width={20} height={20} strokeWidth={2} />
+              </DropdownMenuTrigger>
+              {menu}
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger variant="icon" aria-label="Cài đặt">
+                <Cog6ToothIcon width={20} height={20} strokeWidth={2} />
+              </DropdownMenuTrigger>
+              {menu}
+            </DropdownMenu>
+          </div>
+        </DemoBox>
+      </div>
+    );
+  },
+};
+
+const THEME_LABELS = {
+  light: "Sáng",
+  dark: "Tối",
+  system: "Hệ thống",
+} as const;
+
+type ThemeOption = keyof typeof THEME_LABELS;
+
+type SubMenuStoryArgs = {
+  align: "start" | "center" | "end";
+  triggerText: string;
+  sideOffset: number;
+  contentWidth: number;
+  subContentWidth: number;
+  select: boolean;
+  theme: ThemeOption;
+};
+
+export const ItemExtend: StoryObj<SubMenuStoryArgs> = {
+  args: {
+    align: "start",
+    triggerText: "Tài khoản",
+    sideOffset: 4,
+    contentWidth: 220,
+    subContentWidth: 180,
+    select: true,
+    theme: "light",
+  },
+  render: function ItemExtendStory(args) {
+    const [theme, setTheme] = React.useState<ThemeOption>(args.theme);
+
+    React.useEffect(() => {
+      setTheme(args.theme);
+    }, [args.theme]);
+
+    return (
+      <div>
+        <DemoLabel>
+          SubItem + submenu — chevron bên phải, `select` bật dấu tick
+        </DemoLabel>
+        <DemoBox>
+          <DropdownMenu>
+            <DropdownMenuTrigger variant="default">
+              {args.triggerText}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align={args.align}
+              sideOffset={args.sideOffset}
+              width={args.contentWidth}
+            >
+              <DropdownMenuItem>
+                <Cog6ToothIcon {...iconProps} />
+                Cài đặt
+              </DropdownMenuItem>
+              <DropdownMenuSub select={args.select}>
+                <DropdownMenuSubItem detail={THEME_LABELS[theme]}>
+                  <SunIcon {...iconProps} />
+                  Giao diện
+                </DropdownMenuSubItem>
+                <DropdownMenuSubContent width={args.subContentWidth}>
+                  <DropdownMenuItem
+                    selected={theme === "light"}
+                    onSelect={() => setTheme("light")}
+                  >
+                    <SunIcon {...iconProps} />
+                    Sáng
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    selected={theme === "dark"}
+                    onSelect={() => setTheme("dark")}
+                  >
+                    <MoonIcon {...iconProps} />
+                    Tối
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    selected={theme === "system"}
+                    onSelect={() => setTheme("system")}
+                  >
+                    <Cog6ToothIcon {...iconProps} />
+                    Hệ thống
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubItem>
+                  <QuestionMarkCircleIcon {...iconProps} />
+                  Trợ giúp
+                </DropdownMenuSubItem>
+                <DropdownMenuSubContent width={200}>
+                  <DropdownMenuItem>Tài liệu</DropdownMenuItem>
+                  <DropdownMenuItem>Hỗ trợ</DropdownMenuItem>
+                  <DropdownMenuItem>Liên hệ</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="danger">
+                <ArrowRightStartOnRectangleIcon {...iconProps} />
+                Đăng xuất
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </DemoBox>
+      </div>
+    );
+  },
+};
+
+export const WithIcons: StoryObj<
+  Pick<CustomStoryArgs, "align" | "triggerText" | "contentWidth" | "sideOffset">
+> = {
+  args: {
+    align: "end",
+    triggerText: "Tài khoản",
+    sideOffset: 4,
+    contentWidth: 200,
+  },
+  render: (args) => (
+    <div>
+      <DemoLabel>Menu item có icon + chữ (gap lấy từ .item)</DemoLabel>
+      <DemoBox>
+        <DropdownMenu>
+          <DropdownMenuTrigger variant="default">
+            {args.triggerText}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align={args.align}
+            sideOffset={args.sideOffset}
+            width={args.contentWidth}
+          >
+            <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <UserIcon {...iconProps} />
+              Hồ sơ
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Cog6ToothIcon {...iconProps} />
+              Cài đặt
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <UsersIcon {...iconProps} />
+              Nhóm
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <MoonIcon {...iconProps} />
+              Chế độ tối
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <SunIcon {...iconProps} />
+              Chế độ sáng
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="danger">
+              <ArrowRightStartOnRectangleIcon {...iconProps} />
+              Đăng xuất
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </DemoBox>
+    </div>
+  ),
+};

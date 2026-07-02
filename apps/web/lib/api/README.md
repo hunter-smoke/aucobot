@@ -7,8 +7,8 @@ Mirror **`apps/api` REST** — mỗi file = 1 resource domain.
 | File | API endpoints | Trạng thái |
 |------|---------------|------------|
 | `auth.ts` | `/api/auth/*` | ✅ |
-| `departments.ts` | `/api/departments` | 🔜 |
-| `agents.ts` | `/api/departments/:id/agents` | 🔜 |
+| `conversations.ts` | `/api/conversations` | ✅ |
+| `agents.ts` | `/api/conversations/:id/agents` | 🔜 |
 | `messages.ts` | chat REST (nếu có) | 🔜 |
 | `approvals.ts` | `/api/approvals/*` | 🔜 |
 | `scheduled-posts.ts` | `/api/scheduled-posts` | 🔜 |
@@ -17,9 +17,10 @@ Mirror **`apps/api` REST** — mỗi file = 1 resource domain.
 ## Pattern
 
 ```ts
-export const departmentsApi = {
+export const conversationsApi = {
   list: async () => schema.parse(await http.get(...)),
   create: async (body) => ...,
+  getById: async (id) => ...,
 };
 ```
 

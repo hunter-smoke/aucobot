@@ -1,0 +1,66 @@
+/* 1. WRAPPER - Wrapper */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 2. SLIDER - Root */
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  touch-action: none;
+  width: 100%;
+  height: 20px;
+}
+
+/* 3. TRACK & RANGE */
+.track {
+  background-color: var(--color-border);
+  position: relative;
+  flex-grow: 1;
+  border-radius: var(--radius-full);
+  height: 5px;
+}
+
+.range {
+  position: absolute;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  height: 100%;
+}
+
+/* 4. THUMB */
+.thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-background);
+  border-radius: 50%;
+  cursor: pointer;
+  outline: none;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-fast) ease,
+    box-shadow var(--transition-fast) ease;
+}
+
+.thumb:hover {
+  transform: scale(1.1);
+}
+
+.thumb:active {
+  /* When dragging: show wide special color shadow */
+  box-shadow: 0 0 0 6px var(--color-primary-dim);
+}
+
+/* 5. LABEL */
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-muted-foreground);
+}
