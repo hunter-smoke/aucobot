@@ -1,0 +1,14 @@
+.divider {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) var(--space-4);
+}
+
+.label {
+  background: var(--color-secondary-hover);
+  border-radius: var(--radius-full);
+  color: var(--color-description);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+}

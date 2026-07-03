@@ -1,0 +1,117 @@
+"use client";
+
+import {
+  ArchiveBoxIcon,
+  ArrowLeftIcon,
+  EllipsisVerticalIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+
+import { Avatar } from "@/components/ui/Avatar/Avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/Dropdown/Dropdown";
+
+import type { ConversationResponse } from "@aucobot/shared";
+
+import styles from "./ChatHeader.module.css";
+
+const TYPE_LABEL = {
+  room: "Phòng",
+  session: "Phiên",
+} as const;
+
+export interface ChatHeaderProps {
+  conversation: ConversationResponse;
+  onOpenInfo?: () => void;
+  onRename?: () => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
+  onBack?: () => void;
+}
+
+export function ChatHeader({
+  conversation,
+  onOpenInfo,
+  onRename,
+  onArchive,
+  onDelete,
+  onBack,
+}: ChatHeaderProps) {
+  const { type, title } = conversation;
+
+  return (
+    <header className={styles.header}>
+      {onBack ? (
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={onBack}
+          aria-label="Quay lại"
+        >
+          <ArrowLeftIcon className={styles.icon} />
+        </button>
+      ) : null}
+
+      <button
+        type="button"
+        className={styles.identity}
+        onClick={onOpenInfo}
+        aria-label="Xem thông tin"
+      >
+        <Avatar name={title} seed={conversation.id} size="sm" />
+        <span className={styles.text}>
+          <span className={styles.title}>{title}</span>
+          <span className={styles.subtitle}>{TYPE_LABEL[type]}</span>
+        </span>
+      </button>
+
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={onOpenInfo}
+          aria-label="Thông tin"
+          title="Thông tin"
+        >
+          <InformationCircleIcon className={styles.icon} />
+        </button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger variant="icon" aria-label="Tùy chọn">
+            <EllipsisVerticalIcon className={styles.icon} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {onRename ? (
+              <DropdownMenuItem onSelect={onRename}>
+                <PencilSquareIcon width={18} height={18} />
+                Đổi tên
+              </DropdownMenuItem>
+            ) : null}
+            {type === "session" && onArchive ? (
+              <DropdownMenuItem onSelect={onArchive}>
+                <ArchiveBoxIcon width={18} height={18} />
+                Lưu trữ
+              </DropdownMenuItem>
+            ) : null}
+            {onDelete ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="danger" onSelect={onDelete}>
+                  <TrashIcon width={18} height={18} />
+                  {type === "room" ? "Xoá phòng" : "Xoá phiên"}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+}

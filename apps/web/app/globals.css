@@ -43,6 +43,7 @@
   --rail-width: 4.5rem;
   --sidebar-main-width: 18rem;
   --sidebar-width: calc(var(--rail-width) + var(--sidebar-main-width));
+  --meta-panel-width: 21rem;
   --header-height: 3.5rem;
   --composer-min-height: 3.25rem;
 

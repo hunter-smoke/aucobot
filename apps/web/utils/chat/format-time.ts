@@ -38,3 +38,29 @@ export function formatMessageTime(iso: string): string {
   const date = new Date(iso);
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+/** Ngày đầy đủ "24/06/2026" cho panel thông tin. */
+export function formatFullDate(iso: string): string {
+  const date = new Date(iso);
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+/** Nhãn ngăn cách ngày trong khung chat: "Hôm nay" · "Hôm qua" · "24/06/2026". */
+export function formatDateDivider(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+
+  if (isSameDay(date, now)) return "Hôm nay";
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameDay(date, yesterday)) return "Hôm qua";
+
+  return formatFullDate(iso);
+}
+
+/** Khóa ngày (YYYY-M-D) để phát hiện đổi ngày giữa các tin nhắn. */
+export function dayKey(iso: string): string {
+  const date = new Date(iso);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}

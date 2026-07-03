@@ -1,0 +1,68 @@
+import { Avatar } from "@/components/ui/Avatar/Avatar";
+import type { Message } from "@/types/chat";
+import { formatMessageTime } from "@/utils/chat/format-time";
+
+import { ChatMarkdown } from "../ChatMarkdown/ChatMarkdown";
+
+import styles from "./MessageBubble.module.css";
+
+export interface MessageBubbleProps {
+  message: Message;
+  /** Hiện tên người gửi (agent) — dùng trong phòng nhiều thành viên. */
+  showName?: boolean;
+  /** Tin đầu cụm cùng người gửi. */
+  isGroupStart?: boolean;
+  /** Tin cuối cụm — hiện avatar + giờ. */
+  isGroupEnd?: boolean;
+}
+
+export function MessageBubble({
+  message,
+  showName = false,
+  isGroupStart = true,
+  isGroupEnd = true,
+}: MessageBubbleProps) {
+  const { senderType, senderName, content, createdAt } = message;
+
+  if (senderType === "system") {
+    return (
+      <div className={styles.system}>
+        <span className={styles.systemText}>{content}</span>
+      </div>
+    );
+  }
+
+  const isUser = senderType === "user";
+  const side = isUser ? "out" : "in";
+
+  return (
+    <div className={styles.row} data-side={side}>
+      {!isUser ? (
+        <div className={styles.avatarSlot}>
+          {isGroupEnd ? (
+            <Avatar name={senderName} seed={senderName} size="sm" />
+          ) : null}
+        </div>
+      ) : null}
+
+      <div
+        className={styles.bubble}
+        data-side={side}
+        data-group-start={isGroupStart ? "true" : undefined}
+        data-group-end={isGroupEnd ? "true" : undefined}
+      >
+        {showName && !isUser && isGroupStart ? (
+          <span className={styles.name}>{senderName}</span>
+        ) : null}
+
+        <div className={styles.content}>
+          {isUser ? content : <ChatMarkdown content={content} />}
+        </div>
+
+        {isGroupEnd ? (
+          <span className={styles.time}>{formatMessageTime(createdAt)}</span>
+        ) : null}
+      </div>
+    </div>
+  );
+}

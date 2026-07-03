@@ -1,3 +1,5 @@
+import type { ConversationResponse } from "@aucobot/shared";
+
 import type { Conversation, Message } from "@/types/chat";
 
 /**
@@ -61,6 +63,28 @@ export const mockConversations: Conversation[] = [
   },
 ];
 
+/** Chi tiết hội thoại (contract API) — dùng cho panel thông tin. */
+export const mockRoomDetail: ConversationResponse = {
+  id: "conv-tiktok",
+  type: "room",
+  title: "Team TikTok Q1",
+  description:
+    "Không gian làm việc chung cho chiến dịch TikTok quý 1 — lên ý tưởng, viết kịch bản và lên lịch đăng video.",
+  lastMessageAt: minutes(2),
+  createdAt: days(12),
+  updatedAt: minutes(2),
+};
+
+export const mockSessionDetail: ConversationResponse = {
+  id: "conv-caption",
+  type: "session",
+  title: "Soạn 5 caption Tết",
+  description: null,
+  lastMessageAt: hours(3),
+  createdAt: hours(5),
+  updatedAt: hours(3),
+};
+
 export const mockMessages: Message[] = [
   {
     id: "m1",
@@ -84,6 +108,68 @@ export const mockMessages: Message[] = [
     senderType: "agent",
     senderName: "Scheduler",
     content: "Đã lên lịch 3 video cho tuần này.",
+    createdAt: minutes(2),
+  },
+];
+
+/** Luồng hội thoại đầy đủ (nhiều ngày, markdown, system) cho MessageList/ChatArea. */
+export const mockThreadMessages: Message[] = [
+  {
+    id: "t0",
+    conversationId: "conv-tiktok",
+    senderType: "system",
+    senderName: "",
+    content: "Phòng đã được tạo.",
+    createdAt: days(1),
+  },
+  {
+    id: "t1",
+    conversationId: "conv-tiktok",
+    senderType: "agent",
+    senderName: "Content",
+    content: "Chào bạn 👋 Mình là trợ lý Content, sẵn sàng hỗ trợ marketing.",
+    createdAt: days(1),
+  },
+  {
+    id: "t2",
+    conversationId: "conv-tiktok",
+    senderType: "user",
+    senderName: "Bạn",
+    content: "Viết giúp mình 5 caption Tết theo brand kit nhé.",
+    createdAt: minutes(58),
+  },
+  {
+    id: "t3",
+    conversationId: "conv-tiktok",
+    senderType: "user",
+    senderName: "Bạn",
+    content: "Giọng ấm áp, hướng tới gia đình.",
+    createdAt: minutes(57),
+  },
+  {
+    id: "t4",
+    conversationId: "conv-tiktok",
+    senderType: "agent",
+    senderName: "Content",
+    content:
+      "Tuyệt vời! Đây là **3 caption** đầu tiên:\n\n1. Tết này, sum vầy bên nhau 🧧\n2. Gói trọn yêu thương, trao ngày đầu năm\n3. Năm mới an khang — khởi đầu như ý\n\nBạn muốn mình viết tiếp 2 caption nữa không?",
+    createdAt: minutes(56),
+  },
+  {
+    id: "t5",
+    conversationId: "conv-tiktok",
+    senderType: "user",
+    senderName: "Bạn",
+    content: "Có, và thêm hashtag nhé.",
+    createdAt: minutes(3),
+  },
+  {
+    id: "t6",
+    conversationId: "conv-tiktok",
+    senderType: "agent",
+    senderName: "Content",
+    content:
+      "Đã thêm 2 caption + hashtag:\n\n4. Xuân về, rộn ràng tiếng cười `#Tet2026`\n5. Trao lộc đầu năm, đón vạn điều may `#TetSumVay`\n\nXem hướng dẫn đăng lịch ở [đây](/app).",
     createdAt: minutes(2),
   },
 ];

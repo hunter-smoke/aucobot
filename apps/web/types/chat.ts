@@ -21,6 +21,38 @@ export interface Conversation {
   unreadCount: number;
 }
 
+/** Trạng thái một việc agent đang/đã làm (gọi tool, chạy bước). */
+export type AgentActivityStatus = "running" | "done" | "error";
+
+/** Loại hành động — quyết định icon hiển thị trong timeline. */
+export type AgentActionKind =
+  | "thinking"
+  | "web_search"
+  | "read_document"
+  | "write_content"
+  | "build_workflow"
+  | "schedule"
+  | "publish"
+  | "handoff"
+  | "generic";
+
+export interface AgentActivity {
+  id: string;
+  /** Nhãn việc: "Đang tìm kiếm web", "Soạn caption"… */
+  label: string;
+  status: AgentActivityStatus;
+  /** Loại hành động (icon). Mặc định "generic". */
+  kind?: AgentActionKind;
+  /** Kết quả/ghi chú ngắn (tùy chọn). */
+  detail?: string;
+}
+
+/** Trạng thái tổng của agent để hiển thị cuối thread. */
+export type AgentState =
+  | { kind: "idle" }
+  | { kind: "thinking" }
+  | { kind: "working"; activities: AgentActivity[] };
+
 /** Một bong bóng tin nhắn trong khung chat. */
 export interface Message {
   id: string;

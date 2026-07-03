@@ -123,31 +123,160 @@ Trong mỗi Room/Session, user có hai loại "trợ lý" bổ trợ nhau — **
 | Ví dụ | "Viết 5 caption Tết theo brand kit rồi lên lịch" | "Mỗi 9h sáng lấy post nhiều like nhất tuần → gửi báo cáo" |
 | Ẩn dụ | Nhân viên biết nghĩ | Macro / dây chuyền tự động |
 
-**Luồng "Agent xây Bot" (💡):**
+Bot mới ở mức **ý tưởng**. Toàn bộ thiết kế "Agent xây Bot" được gom vào một khối mở rộng bên dưới để tránh nói lại nhiều lần.
+
+#### Bot Workflow — thiết kế mở rộng (💡 tham khảo khi scale)
+
+> **Đây là ý tưởng tham khảo cho tương lai — KHÔNG phải MVP, không cam kết implement.** Ghi lại các quyết định thiết kế đã bàn để khi mở rộng "Agent xây Bot" thành nền tảng automation (nuôi traffic affiliate, cào–render–đăng video…) không phải nghĩ lại từ đầu. Tất cả bám các seam đã có: *Agent vs Bot*, `Bot`/`BotTemplate`, core+features plugin, thang 5 nấc tách DB, `ownerId` trên mọi bảng.
+
+**Mô hình "compiler" — tách compile-time và runtime.** Đây là ý tưởng nền, mọi quyết định phía dưới suy ra từ đây: Agent làm việc ở *compile-time* (đắt, chậm, 1 lần); Bot chạy ở *runtime* (rẻ, nhanh, lặp vô hạn, **không gọi LLM**).
 
 ```text
-1. User mô tả việc lặp bằng ngôn ngữ tự nhiên cho Agent
-   vd: "Tạo bot mỗi sáng tổng hợp comment mới rồi gắn nhãn"
-2. Agent chọn Bot Template phù hợp (scheduled | trigger | command…)
-3. Agent sinh JS đơn giản điền vào template (steps, input/output Zod)
-4. User xem trước → duyệt → Bot lưu lại, chạy độc lập không cần Agent nữa
-5. Bot chạy trong sandbox cô lập (💡 Vercel Sandbox) — không đụng core / user khác
+compile-time (Agent):   User mô tả → chọn Bot Template → sinh glue JS điền template
+                        → dry-run 1–2 record thật (không side-effect)
+                        → user DUYỆT KẾT QUẢ (không duyệt code)
+                        → lưu thành BotVersion bất biến
+runtime (Bot):          Executor chạy BotVersion đã duyệt — deterministic, KHÔNG đụng LLM,
+                        chạy độc lập trong sandbox cô lập
 ```
 
-**Bot Template (💡):** khung workflow soạn sẵn để **hướng dẫn Agent sinh code đúng** (làm sau). Mỗi template khai báo:
+**Bot Template** — khung workflow soạn sẵn để **hướng dẫn Agent sinh code đúng**. Agent chỉ điền glue vào template, không tự chế khung:
 
 | Thành phần | Vai trò |
 |-----------|---------|
-| `trigger` | `schedule` (cron) · `event` (webhook/message) · `command` (user gõ lệnh) |
-| `steps[]` | Chuỗi bước JS thuần; mỗi bước input/output có **Zod schema** |
+| `trigger` | Enum chính: `schedule` (cron) · `event` (webhook/DB event/listener) · `agent-invoked` (Agent gọi khi user tag giao việc) |
+| `steps[]` | Chuỗi bước JS thuần; mỗi bước input/output có **Zod schema** do template định nghĩa |
 | `tools` | Tool allowlist bot được phép gọi (dùng chung MCP registry với Agent) |
-| `guardrails` | Giới hạn thời gian chạy, số lần retry, không side-effect ngoài allowlist |
+| `guardrails` | Giới hạn khai báo: thời gian chạy, số lần retry, không side-effect ngoài allowlist |
 
-**Nguyên tắc thiết kế (chừa chỗ, chưa build):**
+**1 — Artifact immutable + versioned:** Mỗi lần Agent sinh lại = một `BotVersion` **bất biến** mới (không sửa đè) → rollback được, chống hallucination. Bot đang chạy **pin version**; version mới chỉ active sau khi user duyệt kết quả — **không hot-swap** logic giữa chừng một run.
 
-- **Bot dùng lại hạ tầng có sẵn:** tool allowlist qua MCP registry (như Agent), job/schedule qua `queue` (BullMQ), duyệt qua `approvals`. Bot **không** là kênh riêng.
-- **Agent = "builder", Bot = "artifact":** Agent sinh ra và bảo trì Bot; Bot là kết quả chạy độc lập, versioned.
-- **An toàn thực thi:** JS do AI sinh **phải** chạy trong sandbox cô lập (Vercel Sandbox / worker riêng), không `eval` trong process API.
+**2 — Hai trục quyết định độc lập: trigger (nơi chạy) và độ phức tạp (engine).** Trigger enum chính là `schedule | event | agent-invoked`.
+
+*Trục 1 — Trigger → runtime profile → nơi chạy & chi phí* (không dựa vào số bước):
+
+| Runtime profile | Suy ra từ trigger | Nơi chạy | Chi phí |
+|-----------------|-------------------|----------|---------|
+| **Ephemeral** | `schedule` · `agent-invoked` · `event` (webhook) | Spin-up theo lịch/sự kiện, xong tắt | Tính theo số lần chạy |
+| **Long-lived** | `event` dạng listener / polling (DB event, social monitor canh liên tục) | Execution plane 24/7 riêng | Compute thường trực → gắn "gói 24/7" bán cho user |
+
+> Số bước nhiều **không** đồng nghĩa cần 24/7 — workflow 10 bước chạy cron vẫn ephemeral.
+
+*Trục 2 — Độ phức tạp → chọn engine:*
+
+| | Job đơn / tuyến tính ngắn | Multi-step + human-in-loop / chờ lâu / cần checkpoint |
+|---|---|---|
+| **Engine** | **A — BullMQ** (đã có; tự quản state qua `WorkflowRun`/`WorkflowStep`) | **B — WDK** (durable; tự checkpoint / resume-after-crash / pause chờ duyệt) |
+| **Ví dụ** | Publish 1 bài lúc 9h (MVP) | Scrape → LLM → render → duyệt → đăng (Bot Workflow 💡) |
+
+- **WDK cắm ở tầng code JS** (Next / Express / Hono / Nitro — **không first-class NestJS**) → code workflow B nằm **phía Vercel hoặc JS service riêng**, không nhét vào NestJS. NestJS giữ vai **control plane** (lưu artifact, enqueue, auth); WDK là **execution plane** cho multi-step.
+- Hai trục **độc lập**: một bot có thể *ephemeral + BullMQ* (cron publish đơn) hoặc *ephemeral + WDK* (cron nhiều bước có bước chờ duyệt).
+
+**3 — Sandbox / execution plane cô lập:** NestJS = **control plane** (auth, lưu artifact, enqueue, duyệt) — **không bao giờ** tự chạy JS AI-gen (`eval` bị cấm trong process API). Thực thi đẩy sang execution plane riêng:
+
+- **Hybrid:** ephemeral → **Vercel Sandbox** (microVM per-run, xong huỷ); long-lived → **worker container riêng** (persistent).
+- **Guardrail cứng ở tầng executor** (KHÔNG nằm trong JS AI-gen): no-network trừ tool trong allowlist (MCP registry) · timeout + memory cap + CPU cap · không truy cập secret/env platform · không import module tuỳ ý.
+- **Nhất quán với nguyên tắc MVP:** việc tách execution plane là hệ quả của [Khi nào tách worker khỏi API](#khi-nào-tách-worker-khỏi-api) (Phase 2/3); sandbox **per-run** vẫn là *scale-theo-job*, không phải *container/user* — không vi phạm nguyên tắc "Không container/user".
+
+**4 — Contract giữa các khối Lego (ép ở runtime):** output node N phải `.parse()` Zod thành công mới vào node N+1; fail schema = fail job ngay, không cho data rác lan bước sau. Schema do **Bot Template định nghĩa** (không phải Agent) → Agent chỉ sinh glue map dữ liệu, thu hẹp không gian sai. *(Bước dry-run + duyệt kết quả xem ở sơ đồ compiler bên trên.)*
+
+**5 — Phân tầng bot theo rủi ro pháp lý & nền tảng:**
+
+| Tầng | Loại bot | Rủi ro chính | Chiến lược phòng vệ |
+|------|----------|--------------|---------------------|
+| **Chính danh** | OAuth official (FB Graph, TikTok API) | Chết chùm App ID | Hard-code rate limit + content filter trong template; dùng chung hạ tầng được |
+| **Vùng xám** | scrape / reverse API / render lại | DMCA · ban IP · pháp lý VN | **Cô lập hạ tầng/IP** khỏi tầng chính danh; ép **BYOP + BYO credentials**; ToS safe-harbor riêng |
+
+- Guardrail (content filter + rate limit) đặt **trong executor/template cứng**, chạy **trước node publish** — không đặt trong JS AI-gen (tránh Agent/user gỡ bỏ).
+- ToS "safe harbor": platform chỉ cung cấp công cụ, user chịu trách nhiệm nội dung/nguồn; quyền đơn phương khoá tài khoản khi vi phạm.
+
+**6 — Lưu trữ dữ liệu (tách hot/cold, khớp thang 5 nấc):**
+
+```text
+[Scraper] → raw thô → State store riêng (Redis / schema riêng), TTL tự huỷ ~7 ngày
+                         │
+                  [Agent & glue] (lọc, xào, render)
+                         │
+[Sync] → thành phẩm sạch → Postgres chung (kèm ownerId + workflowId + runId)
+Media (video/ảnh) → R2/S3 (lifecycle rule tự xoá); DB chỉ lưu URL
+```
+
+Model dữ liệu (💡) — cũng liệt kê ở [Schema DB](#schema-db--ý-tưởng-bổ-sung-prisma):
+
+| Model | Vai trò |
+|-------|---------|
+| `Bot` | Định danh + con trỏ tới version đang active + owner/tier |
+| `BotTemplate` | Khung workflow hướng dẫn Agent sinh code (trigger/steps/tools/guardrails) |
+| `BotVersion` | Artifact **bất biến**: graph node + glue JS + I/O schema; rollback = đổi con trỏ |
+| `WorkflowRun` | Mỗi lần chạy — trạng thái tổng |
+| `WorkflowStep` | Output từng node — truyền N→N+1 + resume |
+
+> State tạm/raw **không** để chung Postgres core (seam "vertical split theo domain" — nấc 3).
+
+**7 — Workflow rot & self-healing:** Bot scrape/reverse-API hỏng theo thời gian khi nguồn đổi DOM/API (không phải lỗi code).
+
+- **Health tracking:** metric `last_success` + đếm fail liên tiếp; fail N lần → **tự pause** + Notification Bot báo user.
+- **Self-healing:** output lệch schema → Agent **re-generate glue** từ artifact cũ + sample data mới → `BotVersion` mới → dry-run + user duyệt → active.
+- **Bán tự động:** hệ thống phát hiện + đề xuất; **user duyệt version mới** trước khi chạy (giữ human-in-the-loop, không full-auto).
+
+**Thư viện Bot định sẵn — 4 nhóm Lego (💡):** mỗi bot là một "khối" single-responsibility; Agent đóng vai người lắp ráp, chỉ sinh glue nối đầu ra khối này vào đầu vào khối kia.
+
+| Nhóm | Bot ví dụ | Vai trò |
+|------|-----------|---------|
+| **Trigger** | Cron/Schedule · Webhook Listener · Database Event | Khởi tạo luồng (hiện thực của trigger enum) — không nhận input từ bot khác |
+| **Extraction** | API Fetcher · Web Scraper · Social Monitor | Thu thập dữ liệu thô |
+| **Processing** | Data Mapper (glue) · LLM Transformer · Media Processor · Affiliate Link Generator | "Chế biến" — nơi Agent sinh glue nhiều nhất |
+| **Action** | Social Publisher · Database Sync · Notification | Thực thi cuối ra thế giới ngoài |
+
+Ví dụ lắp ráp: *"Mỗi sáng lấy video top 1 từ X, LLM viết lại caption gắn link affiliate, tự lên lịch đăng"* → `Cron → Web Scraper → Data Mapper (Agent sinh glue tách link/tiêu đề) → LLM Transformer → Affiliate Link Generator → Social Publisher`.
+
+### Luồng tương tác trong Room — ai trả lời? (💡 ý tưởng)
+
+> 💡 tương lai (Room nhiều user = Vòng 2). Giải bài toán "nhiều user + nhiều agent trong một phòng thì ai trả lời, có bị nghẽn không".
+
+**Nguyên tắc gốc — user chỉ tương tác với Agent:** User giao việc bằng cách **tag một Agent**; Agent reasoning rồi **gọi workflow/Bot/tool** để làm. **User không gọi Bot trực tiếp** — Bot/workflow chỉ là *công cụ* của Agent, không phải người tham gia chat.
+
+```text
+User → tag @agent → Agent reasoning → gọi workflow/tool để làm
+                                     → stream "đã nhận → đang làm → đã xong" về Room
+```
+
+**Ai trả lời khi user nhắn** (mention-only + cửa vào, tách theo loại hội thoại):
+
+| Loại hội thoại | Không tag | Có tag |
+|---|---|---|
+| **Session** (1 việc, 1 trợ lý) | Trợ lý mặc định **vẫn trả lời** (như chat 1-1) | (thường không cần) |
+| **Room** (nhiều người + agent) | **Không ai trả lời** (người nói chuyện với nhau, tránh nhiễu + tốn token) | Chỉ agent được tag |
+
+- **Cửa vào `@orchestrator`:** trong Room, tag orchestrator để nó nhận yêu cầu + tự điều phối giao việc → user chỉ cần nhớ **một tên** thay vì nhớ hết specialist.
+- **Reply-to:** trả lời vào tin của agent nào → tiếp tục ngữ cảnh với agent đó, khỏi tag lại.
+
+**Tag nhiều agent cùng lúc — user tự chọn hành vi bằng cách tag khác nhau:**
+
+| Bạn làm gì | Ai điều phối | Thứ tự | Agent thấy nhau? |
+|---|---|---|---|
+| **Tag thẳng nhiều agent** (`@a @b @c`) | Không ai — chạy **song song độc lập** (mỗi agent 1 lane) | Không định trước (xong trước hiện trước) | Không (bắt đầu cùng lúc) |
+| **Tag `@orchestrator`** | Orchestrator lập plan (DAG) | Có — song song/tuần tự theo phụ thuộc | Có (khi tuần tự, agent sau thấy output agent trước) |
+
+→ Cần **nhiều góc nhìn độc lập, nhanh** → tag thẳng; cần **quy trình có thứ tự / bước sau ăn kết quả bước trước** → tag orchestrator. Kèm **concurrency cap**: tag nhiều thì chạy tối đa N song song, phần còn lại xếp hàng (tránh burst token / rate limit).
+
+**Setup orchestrator — gần như bằng 0:**
+
+- **Auto-provision:** mỗi Room tự có sẵn một orchestrator mặc định — user **không phải cấu hình** gì, `@orchestrator` chạy ngay.
+- **Điều phối bằng reasoning, không phải bảng cấu hình:** orchestrator là một **Agent biết nghĩ**; nó đọc **role + mô tả** của các agent trong phòng (sinh từ setup wizard) rồi **tự quyết gọi ai / thứ tự nào theo từng yêu cầu** lúc chạy. User **không khai báo luật "X trước Y sau"** — chỉ cần mô tả rõ vai từng agent lúc tạo (việc vốn phải làm dù có orchestrator hay không).
+- **Không bắt buộc dùng:** phòng không cần orchestrator vẫn chạy (user tag thẳng); phòng chỉ 1 agent thì khỏi cần. Orchestrator chỉ là "đường tắt" khi không muốn nhớ tag ai.
+
+**Workflow được kích hoạt bằng gì** (đã bỏ `command` trực tiếp — user không /slash gọi Bot):
+
+| Trigger | Ai kích | User trong luồng? |
+|---|---|---|
+| `schedule` | hệ thống theo lịch (cron) | Không (tự chạy 9h sáng) |
+| `event` | webhook / DB event / listener | Không |
+| `agent-invoked` | **Agent** (do user tag giao việc) | Có — gián tiếp qua Agent |
+
+**Chống nghẽn (concurrency):** mỗi yêu cầu = **1 run / task lane độc lập**, các run chạy **song song**; **serialize trong từng run** để 2 tin không đè context. Room chỉ là **khung nhìn chung** — mọi member thấy cùng stream qua WebSocket per-conversation. Việc nặng **tách khỏi luồng chat** (enqueue job / Bot Workflow) → chat không treo chờ.
+
+**Guardrails:** concurrency cap số LLM call song song (tránh burst token + rate limit); max handoff steps / turn budget để agent không trả lời qua lại vô tận.
 
 ### Model dữ liệu — **✅ Conversation** · 💡 phần còn lại
 
@@ -331,8 +460,11 @@ API **💡:** `GET /api/conversations/:id/approvals`, `POST /api/approvals/:id/a
 | `Conversation` | Room hoặc Session — **thay `Department`** |
 | `Message` | Tin nhắn trong hội thoại |
 | `Agent` | Agent AI (user tạo) — reasoning, tool calling |
-| `Bot` | Workflow cố định (Agent xây hộ) — JS + trigger/steps, chạy sandbox |
-| `BotTemplate` | Khung workflow hướng dẫn Agent sinh code (scheduled/trigger/command) |
+| `Bot` | Định danh workflow (Agent xây hộ) — con trỏ tới version active + owner/tier |
+| `BotTemplate` | Khung workflow hướng dẫn Agent sinh code (trigger `schedule`/`event`/`agent-invoked`) |
+| `BotVersion` | Artifact **bất biến** của Bot: graph node + glue JS + I/O schema; rollback = đổi con trỏ |
+| `WorkflowRun` | Một lần chạy Bot — trạng thái tổng |
+| `WorkflowStep` | Output từng node — truyền N→N+1 + resume |
 | `BrandKit` | Tone, rules, industry template |
 | `Approval` | Hàng đợi duyệt bài |
 | `AgentMemory` | Learning JSON per room/agent |
@@ -447,7 +579,7 @@ Tách DB là quyết định **theo metric**, không làm sớm. Mỗi nấc ch�
 | `Conversation` (`ownerId`, `type`) | 1 | ✅ Room / Session |
 | `Message` (`conversationId`, `ownerId`, `senderType`) | 1 | 🔜 kế tiếp — agent marketing reply |
 | `Agent` (user tạo — AI reasoning) | 2 | 💡 |
-| `Bot` + `BotTemplate` (workflow JS Agent xây, chạy sandbox) | 2+ | 💡 |
+| `Bot` + `BotTemplate` + `BotVersion` + `WorkflowRun` + `WorkflowStep` (workflow JS Agent xây, chạy sandbox) | 2+ | 💡 xem [Bot Workflow](#bot-workflow--thiết-kế-mở-rộng-tham-khảo-khi-scale) |
 | `ConversationMember` (user \| agent, role) | 2 | 💡 mời đồng nghiệp / gắn agent |
 | `Workspace`, `WorkspaceMember` | 3 | 💡 tổ chức + phân quyền |
 | `AgentGrant` | 3 | 💡 ai được dùng agent nào |
@@ -1215,7 +1347,7 @@ components/Button/
 Prisma schema (PostgreSQL) và export client.
 
 **Models hiện có (✅):** `User`, `RefreshToken`, `EmailOtpChallenge`, `Conversation` (enum `ConversationType: room | session`).
-**Models 💡 (thêm theo vòng):** `Message`, `Agent`, `Bot`, `BotTemplate`, `ConversationMember`, `Workspace`, `WorkspaceMember`, `AgentGrant`, `SocialAccount`, `Approval`, `ScheduledPost`, `AuditLog` — xem [Model DB tiến hóa](#model-db-tiến-hóa-hiện-tại--tương-lai).
+**Models 💡 (thêm theo vòng):** `Message`, `Agent`, `Bot`, `BotTemplate`, `BotVersion`, `WorkflowRun`, `WorkflowStep`, `ConversationMember`, `Workspace`, `WorkspaceMember`, `AgentGrant`, `SocialAccount`, `Approval`, `ScheduledPost`, `AuditLog` — xem [Model DB tiến hóa](#model-db-tiến-hóa-hiện-tại--tương-lai).
 
 ```
 packages/database/
