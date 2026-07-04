@@ -10,13 +10,14 @@ const meta = {
   parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
-      <div style={{ width: "44rem" }}>
+      <div style={{ background: "var(--color-chat)", width: "44rem" }}>
         <Story />
       </div>
     ),
   ],
   args: {
     onOpenInfo: () => console.log("info"),
+    onSearch: () => console.log("search"),
     onRename: () => console.log("rename"),
     onArchive: () => console.log("archive"),
     onDelete: () => console.log("delete"),
@@ -32,5 +33,8 @@ export const Room: Story = {
 };
 
 export const Session: Story = {
-  args: { conversation: mockSessionDetail },
+  args: {
+    conversation: mockSessionDetail,
+    subtitle: "Agent đang hoạt động",
+  },
 };

@@ -1,21 +1,36 @@
 "use client";
 
-import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import {
+  FaceSmileIcon,
+  MicrophoneIcon,
+  PaperAirplaneIcon,
+  PaperClipIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import styles from "./Composer.module.css";
 
 export interface ComposerProps {
   onSend?: (text: string) => void;
+  onAttach?: () => void;
+  onImage?: () => void;
+  onEmoji?: () => void;
+  onVoice?: () => void;
   placeholder?: string;
   disabled?: boolean;
 }
 
 const MAX_ROWS_PX = 200;
+const iconProps = { className: styles.sideIcon, strokeWidth: 2 as const };
 
 export function Composer({
   onSend,
-  placeholder = "Nhắn tin…",
+  onAttach,
+  onImage,
+  onEmoji,
+  onVoice,
+  placeholder = "Nhắn tin",
   disabled = false,
 }: ComposerProps) {
   const [value, setValue] = useState("");
@@ -28,7 +43,8 @@ export function Composer({
     el.style.height = `${Math.min(el.scrollHeight, MAX_ROWS_PX)}px`;
   }, [value]);
 
-  const canSend = value.trim().length > 0 && !disabled;
+  const hasText = value.trim().length > 0;
+  const canSend = hasText && !disabled;
 
   function send() {
     if (!canSend) return;
@@ -36,16 +52,43 @@ export function Composer({
     setValue("");
   }
 
+  function handleAction() {
+    if (hasText) send();
+    else onVoice?.();
+  }
+
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      send();
+      if (canSend) send();
     }
   }
 
   return (
     <div className={styles.composer}>
-      <div className={styles.card}>
+      <div className={styles.pill}>
+        <button
+          type="button"
+          className={styles.sideBtn}
+          onClick={onAttach}
+          disabled={disabled}
+          aria-label="Đính kèm"
+          title="Đính kèm"
+        >
+          <PaperClipIcon {...iconProps} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.sideBtn}
+          onClick={onImage}
+          disabled={disabled}
+          aria-label="Gửi ảnh"
+          title="Gửi ảnh"
+        >
+          <PhotoIcon {...iconProps} />
+        </button>
+
         <textarea
           ref={textareaRef}
           className={styles.input}
@@ -56,16 +99,37 @@ export function Composer({
           rows={1}
           disabled={disabled}
         />
+
         <button
           type="button"
-          className={styles.sendBtn}
-          onClick={send}
-          disabled={!canSend}
-          aria-label="Gửi"
-          title="Gửi"
-          data-active={canSend ? "true" : undefined}
+          className={styles.sideBtn}
+          onClick={onEmoji}
+          disabled={disabled}
+          aria-label="Emoji"
+          title="Emoji"
         >
-          <PaperAirplaneIcon className={styles.sendIcon} />
+          <FaceSmileIcon {...iconProps} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.actionBtn}
+          onClick={handleAction}
+          disabled={disabled}
+          aria-label={hasText ? "Gửi" : "Ghi âm"}
+          title={hasText ? "Gửi" : "Ghi âm"}
+          data-mode={hasText ? "send" : "voice"}
+        >
+          <span className={styles.actionIcons} aria-hidden>
+            <MicrophoneIcon
+              className={`${styles.actionIcon} ${styles.micIcon}`}
+              strokeWidth={2}
+            />
+            <PaperAirplaneIcon
+              className={`${styles.actionIcon} ${styles.planeIcon}`}
+              strokeWidth={2}
+            />
+          </span>
         </button>
       </div>
     </div>

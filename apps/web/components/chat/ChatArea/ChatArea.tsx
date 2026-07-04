@@ -16,6 +16,7 @@ export interface ChatAreaProps {
   agentState?: AgentState;
   onSend?: (text: string) => void;
   onOpenInfo?: () => void;
+  onSearch?: () => void;
   onRename?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
@@ -28,6 +29,7 @@ export function ChatArea({
   agentState,
   onSend,
   onOpenInfo,
+  onSearch,
   onRename,
   onArchive,
   onDelete,
@@ -35,20 +37,32 @@ export function ChatArea({
 }: ChatAreaProps) {
   return (
     <div className={styles.area}>
-      <ChatHeader
-        conversation={conversation}
-        onOpenInfo={onOpenInfo}
-        onRename={onRename}
-        onArchive={onArchive}
-        onDelete={onDelete}
-        onBack={onBack}
-      />
-      <MessageList
-        messages={messages}
-        showNames={conversation.type === "room"}
-        agentState={agentState}
-      />
-      <Composer onSend={onSend} />
+      {/* Lớp tin nhắn — cuộn full màn, nằm dưới header/composer */}
+      <div className={styles.messagesLayer}>
+        <MessageList
+          messages={messages}
+          showNames={conversation.type === "room"}
+          agentState={agentState}
+        />
+      </div>
+
+      {/* Header nổi */}
+      <div className={styles.headerFloat}>
+        <ChatHeader
+          conversation={conversation}
+          onOpenInfo={onOpenInfo}
+          onSearch={onSearch}
+          onRename={onRename}
+          onArchive={onArchive}
+          onDelete={onDelete}
+          onBack={onBack}
+        />
+      </div>
+
+      {/* Composer nổi */}
+      <div className={styles.composerFloat}>
+        <Composer onSend={onSend} />
+      </div>
     </div>
   );
 }

@@ -18,6 +18,7 @@ const meta = {
   args: {
     onSend: (text: string) => console.log("send", text),
     onOpenInfo: () => console.log("info"),
+    onSearch: () => console.log("search"),
     onRename: () => console.log("rename"),
     onArchive: () => console.log("archive"),
     onDelete: () => console.log("delete"),

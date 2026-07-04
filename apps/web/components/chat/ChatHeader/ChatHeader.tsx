@@ -4,7 +4,7 @@ import {
   ArchiveBoxIcon,
   ArrowLeftIcon,
   EllipsisVerticalIcon,
-  InformationCircleIcon,
+  MagnifyingGlassIcon,
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -27,9 +27,14 @@ const TYPE_LABEL = {
   session: "Phiên",
 } as const;
 
+const iconProps = { className: styles.actionIcon, strokeWidth: 2 as const };
+
 export interface ChatHeaderProps {
   conversation: ConversationResponse;
+  /** Dòng phụ dưới tên (mặc định: loại phòng/phiên). */
+  subtitle?: string;
   onOpenInfo?: () => void;
+  onSearch?: () => void;
   onRename?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
@@ -38,24 +43,27 @@ export interface ChatHeaderProps {
 
 export function ChatHeader({
   conversation,
+  subtitle,
   onOpenInfo,
+  onSearch,
   onRename,
   onArchive,
   onDelete,
   onBack,
 }: ChatHeaderProps) {
   const { type, title } = conversation;
+  const statusLine = subtitle ?? TYPE_LABEL[type];
 
   return (
     <header className={styles.header}>
       {onBack ? (
         <button
           type="button"
-          className={styles.iconBtn}
+          className={styles.backBtn}
           onClick={onBack}
           aria-label="Quay lại"
         >
-          <ArrowLeftIcon className={styles.icon} />
+          <ArrowLeftIcon {...iconProps} />
         </button>
       ) : null}
 
@@ -68,35 +76,42 @@ export function ChatHeader({
         <Avatar name={title} seed={conversation.id} size="sm" />
         <span className={styles.text}>
           <span className={styles.title}>{title}</span>
-          <span className={styles.subtitle}>{TYPE_LABEL[type]}</span>
+          <span className={styles.subtitle}>{statusLine}</span>
         </span>
       </button>
 
       <div className={styles.actions}>
         <button
           type="button"
-          className={styles.iconBtn}
-          onClick={onOpenInfo}
-          aria-label="Thông tin"
-          title="Thông tin"
+          className={styles.actionBtn}
+          onClick={onSearch}
+          aria-label="Tìm trong cuộc trò chuyện"
+          title="Tìm kiếm"
         >
-          <InformationCircleIcon className={styles.icon} />
+          <MagnifyingGlassIcon {...iconProps} />
         </button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger variant="icon" aria-label="Tùy chọn">
-            <EllipsisVerticalIcon className={styles.icon} />
+          <DropdownMenuTrigger
+            variant="unstyled"
+            className={styles.actionBtn}
+            aria-label="Tùy chọn"
+          >
+            <EllipsisVerticalIcon
+              className={styles.kebabIcon}
+              strokeWidth={2}
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {onRename ? (
               <DropdownMenuItem onSelect={onRename}>
-                <PencilSquareIcon width={18} height={18} />
+                <PencilSquareIcon width={18} height={18} strokeWidth={2} />
                 Đổi tên
               </DropdownMenuItem>
             ) : null}
             {type === "session" && onArchive ? (
               <DropdownMenuItem onSelect={onArchive}>
-                <ArchiveBoxIcon width={18} height={18} />
+                <ArchiveBoxIcon width={18} height={18} strokeWidth={2} />
                 Lưu trữ
               </DropdownMenuItem>
             ) : null}
@@ -104,7 +119,7 @@ export function ChatHeader({
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="danger" onSelect={onDelete}>
-                  <TrashIcon width={18} height={18} />
+                  <TrashIcon width={18} height={18} strokeWidth={2} />
                   {type === "room" ? "Xoá phòng" : "Xoá phiên"}
                 </DropdownMenuItem>
               </>

@@ -15,6 +15,10 @@ const meta = {
   ],
   args: {
     onSend: (text: string) => console.log("send", text),
+    onAttach: () => console.log("attach"),
+    onImage: () => console.log("image"),
+    onEmoji: () => console.log("emoji"),
+    onVoice: () => console.log("voice"),
   },
 } satisfies Meta<typeof Composer>;
 
