@@ -1,12 +1,12 @@
 import {
   ArrowRightCircleIcon,
   BoltIcon,
+  ClockIcon,
   Cog6ToothIcon,
   DocumentTextIcon,
-  GlobeAltIcon,
+  MagnifyingGlassIcon,
   PaperAirplaneIcon,
   PencilSquareIcon,
-  ClockIcon,
   SparklesIcon,
 } from "@heroicons/react/20/solid";
 import type { ComponentType, SVGProps } from "react";
@@ -24,7 +24,7 @@ const KIND_ICON: Record<
   ComponentType<SVGProps<SVGSVGElement>>
 > = {
   thinking: SparklesIcon,
-  web_search: GlobeAltIcon,
+  web_search: MagnifyingGlassIcon,
   read_document: DocumentTextIcon,
   write_content: PencilSquareIcon,
   build_workflow: Cog6ToothIcon,
@@ -66,18 +66,33 @@ export function AgentActivityCard({ activities }: AgentActivityCardProps) {
           {activities.map((activity, i) => {
             const Icon = KIND_ICON[activity.kind ?? "generic"];
             const isLast = i === activities.length - 1;
+            const next = activities[i + 1];
+            const connectorFilled =
+              activity.status === "done" &&
+              (state === "done" ||
+                next?.status === "done" ||
+                next?.status === "error");
+            const connectorFlowing =
+              activity.status === "done" && next?.status === "running";
 
             return (
               <li
                 key={activity.id}
                 className={styles.step}
                 data-status={activity.status}
-                data-last={isLast ? "true" : undefined}
               >
                 <span className={styles.marker}>
                   <span className={styles.iconBubble}>
                     <Icon className={styles.icon} />
                   </span>
+                  {!isLast ? (
+                    <span
+                      className={styles.connector}
+                      data-filled={connectorFilled ? "true" : undefined}
+                      data-flowing={connectorFlowing ? "true" : undefined}
+                      aria-hidden
+                    />
+                  ) : null}
                 </span>
                 <span className={styles.body}>
                   <span className={styles.label}>{activity.label}</span>
