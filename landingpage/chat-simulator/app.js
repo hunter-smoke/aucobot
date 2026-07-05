@@ -46,6 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
         
         dynamicArea.innerHTML = '';
         inputField.innerHTML = '<span class="text-gray-400" id="input-placeholder">Nhắn tin</span>';
+        const actionBtn = document.getElementById('action-btn');
+        if (actionBtn) actionBtn.setAttribute('data-mode', 'voice');
         
         startSimulation();
         
@@ -71,6 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // Click vào ô và bắt đầu gõ
             schedule(() => {
                 cursor.style.opacity = '0';
+                const actionBtn = document.getElementById('action-btn');
+                if (actionBtn) actionBtn.setAttribute('data-mode', 'send');
                 inputField.innerHTML = '<span class="text-gray-800 cursor-blink font-normal" id="typing-text"></span>';
                 const typingTextSpan = document.getElementById('typing-text');
 
@@ -105,6 +109,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function submitMessage() {
         inputField.innerHTML = '<span class="text-gray-400" id="input-placeholder">Nhắn tin</span>';
+        const actionBtn = document.getElementById('action-btn');
+        if (actionBtn) actionBtn.setAttribute('data-mode', 'voice');
         
         const userMsgHTML = `
             <div class="flex justify-end mb-1 fade-in">
@@ -122,86 +128,97 @@ document.addEventListener("DOMContentLoaded", () => {
     function showBotProgress() {
         const botProgressId = 'bot-progress-box';
         const progressHTML = `
-            <div class="flex gap-3 mb-1 fade-in" id="${botProgressId}">
-                <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">TL</div>
-                <div class="bg-white p-4.5 rounded-2xl rounded-tl-sm max-w-[85%] w-full shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50/80">
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center gap-2">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-                            </span>
-                            <span class="font-bold text-gray-800 text-xs tracking-wide">Đang làm việc</span>
-                        </div>
-                        <span class="text-gray-400 text-xs font-semibold" id="progress-count">1/6</span>
+            <div class="activity-row fade-in" id="${botProgressId}">
+                <div class="activity-avatar">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">TL</div>
+                </div>
+                <div class="activity-card">
+                    <div class="activity-header" id="activity-header" data-state="working">
+                        <span class="activity-dot"></span>
+                        <span class="activity-header-text">Đang làm việc</span>
+                        <span class="activity-header-count" id="progress-count">1/6</span>
                     </div>
                     
-                    <div class="relative pl-2 space-y-4">
-                        <div class="absolute left-[19px] top-3 bottom-4 w-[2px] bg-gray-100 z-0"></div>
-                        <div class="absolute left-[19px] top-3 w-[2px] bg-emerald-500 z-0 transition-all duration-500" id="progress-line-active" style="height: 0%;"></div>
-
+                    <ol class="activity-timeline">
                         <!-- Step 1: Phân tích yêu cầu -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step-1">
-                            <div class="w-6 h-6 rounded-full bg-emerald-55 flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
-                                <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <li class="activity-step" id="step-1" data-status="running">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon-1">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg>
+                                </span>
+                                <span class="activity-connector" id="connector-1"></span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label">Phân tích yêu cầu</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700">Phân tích yêu cầu</span>
-                            </div>
-                        </div>
+                        </li>
 
                         <!-- Step 2: Đọc brand kit Tết -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step-2">
-                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm" id="icon-2">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <li class="activity-step" id="step-2" data-status="pending">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon-2">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                                </span>
+                                <span class="activity-connector" id="connector-2"></span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label">Đọc brand kit Tết</span>
+                                <span class="activity-step-detail hidden" id="desc-2">3 tài liệu</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700">Đọc brand kit Tết</span>
-                                <span class="text-[10px] text-gray-400 hidden" id="desc-2">3 tài liệu</span>
-                            </div>
-                        </div>
+                        </li>
 
                         <!-- Step 3: Tìm xu hướng caption Tết -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step-3">
-                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm" id="icon-3">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <li class="activity-step" id="step-3" data-status="pending">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon-3">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                </span>
+                                <span class="activity-connector" id="connector-3"></span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label">Tìm xu hướng caption Tết</span>
+                                <span class="activity-step-detail hidden" id="desc-3">12 kết quả</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700">Tìm xu hướng caption Tết</span>
-                                <span class="text-[10px] text-gray-400 hidden" id="desc-3">12 kết quả</span>
-                            </div>
-                        </div>
+                        </li>
 
                         <!-- Step 4: Soạn 3 caption + CTA -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step-4">
-                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm" id="icon-4">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <li class="activity-step" id="step-4" data-status="pending">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon-4">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                </span>
+                                <span class="activity-connector" id="connector-4"></span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label">Soạn 3 caption + CTA</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700">Soạn 3 caption + CTA</span>
-                            </div>
-                        </div>
+                        </li>
 
                         <!-- Step 5: Lên lịch đăng -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step-5">
-                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm" id="icon-5">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <li class="activity-step" id="step-5" data-status="pending">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon-5">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                </span>
+                                <span class="activity-connector" id="connector-5"></span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label">Lên lịch đăng 09:00 ngày 28/1</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700">Lên lịch đăng 09:00 ngày 28/1</span>
-                            </div>
-                        </div>
+                        </li>
                         
                         <!-- Step 6: Chuyển Publisher chuẩn bị đăng -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step-6">
-                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm" id="icon-6">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <li class="activity-step" id="step-6" data-status="pending">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon-6">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4M8 12h8"/></svg>
+                                </span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label" id="text-6">Chuyển Publisher chuẩn bị đăng</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700" id="text-6">Chuyển Publisher chuẩn bị đăng</span>
-                            </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ol>
                 </div>
             </div>
         `;
@@ -209,37 +226,40 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollToBottom();
 
         const steps = 6;
-        const activeLine = document.getElementById('progress-line-active');
         const countText = document.getElementById('progress-count');
 
         function activateStep(stepNum) {
             const stepEl = document.getElementById(`step-${stepNum}`);
             if (!stepEl) return;
-            stepEl.classList.remove('opacity-50');
-            stepEl.classList.add('opacity-100');
+            stepEl.setAttribute('data-status', 'running');
 
             if (stepNum > 1) {
-                const iconBg = document.getElementById(`icon-${stepNum}`);
-                if (iconBg) {
-                    iconBg.classList.remove('bg-gray-100');
-                    
-                    if(stepNum === 6) {
-                        iconBg.classList.add('bg-sky-50', 'ring-2', 'ring-sky-100');
-                        iconBg.querySelector('svg').classList.replace('text-gray-400', 'text-sky-500');
-                        document.getElementById('text-6').classList.replace('text-gray-700', 'text-sky-500');
-                        document.getElementById('text-6').innerText = "Chuyển Publisher chuẩn bị đăng...";
-                    } else {
-                        iconBg.classList.add('bg-emerald-50');
-                        iconBg.innerHTML = '<svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>';
+                const prevStepEl = document.getElementById(`step-${stepNum - 1}`);
+                if (prevStepEl) prevStepEl.setAttribute('data-status', 'done');
+                
+                const prevConnector = document.getElementById(`connector-${stepNum - 1}`);
+                if (prevConnector) {
+                    prevConnector.setAttribute('data-flowing', 'true');
+                    prevConnector.removeAttribute('data-filled');
+                }
+                
+                if (stepNum > 2) {
+                    const oldConnector = document.getElementById(`connector-${stepNum - 2}`);
+                    if (oldConnector) {
+                        oldConnector.removeAttribute('data-flowing');
+                        oldConnector.setAttribute('data-filled', 'true');
                     }
                 }
             }
 
+            if (stepNum === 6) {
+                document.getElementById('text-6').innerText = "Chuyển Publisher chuẩn bị đăng...";
+            }
+
             const desc = document.getElementById(`desc-${stepNum}`);
-            if(desc) desc.classList.remove('hidden');
+            if (desc) desc.classList.remove('hidden');
 
             countText.innerText = `${stepNum}/${steps}`;
-            activeLine.style.height = `${(stepNum - 1) * 20}%`;
             scrollToBottom();
 
             if (stepNum < steps) {
@@ -248,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }, 750);
             } else {
                 schedule(() => {
+                    stepEl.setAttribute('data-status', 'done');
                     const progressBox = document.getElementById(botProgressId);
                     if (progressBox) progressBox.style.display = 'none';
                     showFinalResult();
@@ -276,14 +297,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         </p>
                     </div>
                     
-                    <div class="flex flex-col gap-2 mt-1">
-                        <button id="btn-duyet" class="chip-btn w-full">
+                    <div class="flex flex-col gap-[2px] mt-1">
+                        <button id="btn-duyet" class="glass-btn w-full">
                             Duyệt
                         </button>
-                        <button class="chip-btn w-full">
+                        <button class="glass-btn w-full">
                             Từ chối
                         </button>
-                        <button class="chip-btn w-full">
+                        <button class="glass-btn w-full">
                             Sửa
                         </button>
                     </div>
@@ -336,44 +357,43 @@ document.addEventListener("DOMContentLoaded", () => {
     function showSchedulingProgress() {
         const botProgressId2 = 'bot-progress-box-2';
         const progressHTML = `
-            <div class="flex gap-3 mb-1 mt-2 fade-in" id="${botProgressId2}">
-                <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">TL</div>
-                <div class="bg-white p-4.5 rounded-2xl rounded-tl-sm max-w-[85%] w-full shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50/80">
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center gap-2">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-                            </span>
-                            <span class="font-bold text-gray-800 text-xs tracking-wide">Đang xử lý</span>
-                        </div>
-                        <span class="text-gray-400 text-xs font-semibold" id="progress-count-2">1/2</span>
+            <div class="activity-row mb-1 mt-2 fade-in" id="${botProgressId2}">
+                <div class="activity-avatar">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">TL</div>
+                </div>
+                <div class="activity-card">
+                    <div class="activity-header" id="activity-header-2" data-state="working">
+                        <span class="activity-dot"></span>
+                        <span class="activity-header-text">Đang xử lý</span>
+                        <span class="activity-header-count" id="progress-count-2">1/2</span>
                     </div>
                     
-                    <div class="relative pl-2 space-y-4">
-                        <div class="absolute left-[19px] top-3 bottom-4 w-[2px] bg-gray-100 z-0"></div>
-                        <div class="absolute left-[19px] top-3 w-[2px] bg-emerald-500 z-0 transition-all duration-500" id="progress-line-active-2" style="height: 0%;"></div>
-
+                    <ol class="activity-timeline">
                         <!-- Step 1 -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step2-1">
-                            <div class="w-6 h-6 rounded-full bg-emerald-55 flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
-                                <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <li class="activity-step" id="step2-1" data-status="running">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon2-1">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </span>
+                                <span class="activity-connector" id="connector2-1"></span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label">Đồng bộ với hệ thống</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700">Đồng bộ với hệ thống</span>
-                            </div>
-                        </div>
+                        </li>
 
                         <!-- Step 2 -->
-                        <div class="flex gap-3 relative z-10 opacity-50 transition-all" id="step2-2">
-                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm" id="icon2-2">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <li class="activity-step" id="step2-2" data-status="pending">
+                            <span class="activity-marker">
+                                <span class="activity-icon-bubble" id="icon2-2">
+                                    <svg class="activity-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                </span>
+                            </span>
+                            <div class="activity-step-body">
+                                <span class="activity-step-label" id="text2-2">Đang thiết lập thời gian...</span>
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <span class="text-xs font-semibold text-gray-700" id="text2-2">Đang thiết lập thời gian...</span>
-                            </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ol>
                 </div>
             </div>
         `;
@@ -381,31 +401,29 @@ document.addEventListener("DOMContentLoaded", () => {
         scrollToBottom();
 
         const steps = 2;
-        const activeLine = document.getElementById('progress-line-active-2');
         const countText = document.getElementById('progress-count-2');
 
         function activateStep2(stepNum) {
             const stepEl = document.getElementById(`step2-${stepNum}`);
             if (!stepEl) return;
-            stepEl.classList.remove('opacity-50');
-            stepEl.classList.add('opacity-100');
+            stepEl.setAttribute('data-status', 'running');
 
             if (stepNum > 1) {
-                const iconBg = document.getElementById(`icon2-${stepNum}`);
-                if (iconBg) {
-                    iconBg.classList.remove('bg-gray-100');
-                    
-                    if(stepNum === 2) {
-                        iconBg.classList.add('bg-sky-50', 'ring-2', 'ring-sky-100');
-                        iconBg.querySelector('svg').classList.replace('text-gray-400', 'text-sky-500');
-                        document.getElementById('text2-2').classList.replace('text-gray-700', 'text-sky-500');
-                        document.getElementById('text2-2').innerText = "Đã lên lịch xong";
-                    }
+                const prevStepEl = document.getElementById(`step2-${stepNum - 1}`);
+                if (prevStepEl) prevStepEl.setAttribute('data-status', 'done');
+                
+                const prevConnector = document.getElementById(`connector2-${stepNum - 1}`);
+                if (prevConnector) {
+                    prevConnector.setAttribute('data-flowing', 'true');
+                    prevConnector.removeAttribute('data-filled');
+                }
+                
+                if (stepNum === 2) {
+                    document.getElementById('text2-2').innerText = "Đã lên lịch xong";
                 }
             }
 
             countText.innerText = `${stepNum}/${steps}`;
-            activeLine.style.height = `${(stepNum - 1) * 100}%`;
             scrollToBottom();
 
             if (stepNum < steps) {
@@ -414,6 +432,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }, 1200);
             } else {
                 schedule(() => {
+                    stepEl.setAttribute('data-status', 'done');
                     const progressBox = document.getElementById(botProgressId2);
                     if (progressBox) progressBox.style.display = 'none'; 
                     showFinalScheduledMessage();
