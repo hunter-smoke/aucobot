@@ -24,7 +24,7 @@ export const ROADMAP: RoadmapPhase[] = [
     items: [
       { label: "Xác thực (OTP email + Google)", status: "done" },
       { label: "Phòng Marketing (Room / Session)", status: "done" },
-      { label: "Giao diện chat kiểu Telegram", status: "done" },
+      { label: "Giao diện chat", status: "done" },
       { label: "Bật/tắt feature qua config", status: "done" },
     ],
   },

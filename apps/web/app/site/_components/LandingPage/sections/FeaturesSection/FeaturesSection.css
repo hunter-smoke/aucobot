@@ -1,0 +1,101 @@
+/* Features Section */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--border-color-glow);
+  background: var(--bg-card-hover);
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.05);
+}
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gradient-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: var(--transition-smooth);
+}
+.feature-card:hover::before {
+  transform: scaleX(1);
+}
+
+.feature-num {
+  font-size: 3rem;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.03);
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  line-height: 1;
+  transition: var(--transition-smooth);
+}
+.feature-card:hover .feature-num {
+  color: rgba(79, 70, 229, 0.08);
+  transform: scale(1.1);
+}
+
+.feature-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  margin-bottom: 2rem;
+  font-size: 1.35rem;
+  transition: var(--transition-smooth);
+}
+.feature-card:hover .feature-icon-wrapper {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+}
+
+.feature-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.85rem;
+}
+.feature-desc {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .features-grid {
+    gap: 1.5rem;
+  }
+}

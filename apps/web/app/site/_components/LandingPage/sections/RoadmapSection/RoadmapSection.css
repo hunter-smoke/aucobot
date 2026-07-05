@@ -1,0 +1,228 @@
+/* Build in Public Section */
+.public-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 4rem;
+}
+
+.public-dashboard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.progress-circle-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin-bottom: 2rem;
+}
+.progress-svg {
+  transform: rotate(-90deg);
+}
+.progress-bg {
+  fill: none;
+  stroke: rgba(15, 23, 42, 0.04);
+  stroke-width: 12;
+}
+.progress-bar-fill {
+  fill: none;
+  stroke: var(--color-secondary);
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 502;
+  stroke-dashoffset: 351; /* 30% */
+  transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.progress-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1;
+}
+.progress-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.dashboard-status {
+  width: 100%;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+.status-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  list-style: none;
+  text-align: left;
+}
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.status-icon-ok {
+  color: var(--color-success);
+}
+.status-icon-pending {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.15);
+  border: 2px solid var(--color-secondary);
+  display: inline-block;
+}
+
+.update-date {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  margin-top: 1.5rem;
+}
+
+/* Timeline */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: relative;
+  padding-left: 2rem;
+}
+.timeline-container::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.timeline-phase {
+  position: relative;
+}
+.timeline-dot {
+  position: absolute;
+  left: -32px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid rgba(15, 23, 42, 0.12);
+  z-index: 5;
+  transition: var(--transition-smooth);
+}
+
+.timeline-phase.completed .timeline-dot {
+  background: var(--color-success);
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+.timeline-phase.active .timeline-dot {
+  background: var(--color-secondary);
+  border-color: rgba(14, 165, 233, 0.2);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+}
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.phase-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.phase-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.phase-badge.completed {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--color-success);
+}
+.phase-badge.active {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0284c7;
+}
+.phase-badge.upcoming {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--color-text-dim);
+}
+
+.phase-content {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+.phase-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.phase-items {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+.phase-item {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.phase-item::before {
+  content: "•";
+  color: var(--color-text-dim);
+}
+.timeline-phase.completed .phase-item {
+  color: var(--color-text-main);
+}
+.timeline-phase.completed .phase-item::before {
+  color: var(--color-success);
+}
+
+@media (max-width: 1024px) {
+  .public-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-grid {
+    gap: 1.5rem;
+  }
+}

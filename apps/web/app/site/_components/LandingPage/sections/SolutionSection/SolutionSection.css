@@ -1,0 +1,86 @@
+/* Solution Section */
+.solution-flow-container {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* SVG Flow Diagram Styling */
+.flow-diagram-svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+}
+
+.flow-node {
+  cursor: pointer;
+}
+.flow-node rect,
+.flow-node circle {
+  fill: rgba(255, 255, 255, 0.85);
+  stroke: rgba(15, 23, 42, 0.12);
+  stroke-width: 1.5;
+  transition: var(--transition-smooth);
+}
+.flow-node text {
+  fill: var(--color-text-main);
+  font-family: var(--font-main);
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.flow-node:hover rect,
+.flow-node:hover circle {
+  stroke: var(--color-primary);
+  fill: rgba(79, 70, 229, 0.1);
+  filter: drop-shadow(0 0 8px rgba(79, 70, 229, 0.25));
+}
+
+.flow-node.highlight rect {
+  stroke: var(--color-secondary);
+  fill: rgba(14, 165, 233, 0.08);
+}
+
+.flow-node.user rect {
+  fill: rgba(255, 255, 255, 0.9);
+  stroke: var(--color-text-dim);
+}
+.flow-node.user:hover rect {
+  stroke: var(--color-text-main);
+  fill: rgba(255, 255, 255, 1);
+}
+
+.flow-node.center-room rect {
+  fill: rgba(79, 70, 229, 0.06);
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.flow-link {
+  fill: none;
+  stroke: rgba(15, 23, 42, 0.1);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  transition: var(--transition-smooth);
+}
+.flow-link.active {
+  stroke: var(--color-primary);
+  stroke-dasharray: none;
+  animation: flow-dash 30s linear infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+.glow-particle {
+  fill: var(--color-secondary);
+  filter: drop-shadow(0 0 3px var(--color-secondary));
+}
