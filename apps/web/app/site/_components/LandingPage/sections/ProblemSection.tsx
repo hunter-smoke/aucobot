@@ -7,7 +7,7 @@ import {
   VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 const TOOLS = [
   { Icon: ChatBubbleLeftRightIcon, label: "ChatGPT để viết" },

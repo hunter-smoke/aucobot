@@ -635,94 +635,6 @@
   margin-top: var(--space-2);
 }
 
-/* ═══ Product preview ═══ */
-.previewWrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  margin-top: var(--space-8);
-  overflow: hidden;
-}
-
-.previewChrome {
-  align-items: center;
-  background: var(--bg-2);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-}
-
-.previewDot {
-  background: var(--border-strong);
-  border-radius: var(--radius-full);
-  height: 0.55rem;
-  width: 0.55rem;
-}
-
-.previewLabel {
-  color: var(--muted);
-  font-size: var(--font-xs);
-  margin-left: var(--space-2);
-}
-
-.previewSteps {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-6);
-}
-
-.previewStep {
-  align-items: flex-start;
-  display: flex;
-  gap: var(--space-3);
-}
-
-.previewStepIcon {
-  align-items: center;
-  background: color-mix(in srgb, var(--primary) 14%, transparent);
-  border-radius: var(--radius-full);
-  color: var(--primary-2);
-  display: flex;
-  flex-shrink: 0;
-  font-size: var(--font-sm);
-  height: 1.8rem;
-  justify-content: center;
-  width: 1.8rem;
-}
-
-.previewStepText {
-  color: var(--text);
-  font-size: var(--font-md);
-  padding-top: 3px;
-}
-
-.previewStepText span {
-  color: var(--muted);
-  font-size: var(--font-sm);
-}
-
-.previewApprove {
-  align-items: center;
-  background: color-mix(in srgb, var(--done) 12%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--done) 40%, transparent);
-  border-radius: var(--radius-md);
-  color: var(--done);
-  display: flex;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  gap: var(--space-2);
-  margin-left: calc(1.8rem + var(--space-3));
-  padding: var(--space-3) var(--space-4);
-}
-
-.previewApprove .glyph {
-  flex-shrink: 0;
-  height: 1.1rem;
-  width: 1.1rem;
-}
-
 /* ═══ Build in public ═══ */
 .bipTop {
   align-items: center;
@@ -1101,11 +1013,6 @@
   color: var(--primary-2);
   height: 1.7rem;
   width: 1.7rem;
-}
-
-.previewStepIcon .glyph {
-  height: 1rem;
-  width: 1rem;
 }
 
 /* ═══ Responsive ═══ */

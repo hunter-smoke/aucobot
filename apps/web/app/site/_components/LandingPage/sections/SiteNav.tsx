@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 const LINKS = [
   { label: "Vấn đề", href: "#van-de" },

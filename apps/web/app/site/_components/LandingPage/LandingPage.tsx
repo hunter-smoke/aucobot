@@ -1,17 +1,17 @@
-import styles from "./MarketingLanding.module.css";
+import styles from "./LandingPage.module.css";
 import { ArchitectureSection } from "./sections/ArchitectureSection";
 import { BuildInPublic } from "./sections/BuildInPublic";
 import { CommunitySection } from "./sections/CommunitySection";
 import { FaqSection } from "./sections/FaqSection";
 import { FeaturesSection } from "./sections/FeaturesSection";
 import { Hero } from "./sections/Hero";
+import { LivePreviews } from "./LivePreviews/LivePreviews";
 import { ProblemSection } from "./sections/ProblemSection";
-import { ProductPreview } from "./sections/ProductPreview";
 import { SiteFooter } from "./sections/SiteFooter";
 import { SiteNav } from "./sections/SiteNav";
 import { SolutionSection } from "./sections/SolutionSection";
 
-export function MarketingLanding() {
+export function LandingPage() {
   return (
     <div className={styles.page}>
       <div aria-hidden className={styles.bgGrid} />
@@ -25,7 +25,7 @@ export function MarketingLanding() {
         <ProblemSection />
         <SolutionSection />
         <FeaturesSection />
-        <ProductPreview />
+        <LivePreviews />
         <BuildInPublic />
         <ArchitectureSection />
         <CommunitySection />

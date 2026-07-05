@@ -1,7 +1,13 @@
 .row {
+  align-items: flex-start;
   animation: fadeIn var(--transition) ease-out;
   display: flex;
-  padding: 2px var(--space-4) 2px calc(var(--space-4) + 46px);
+  gap: var(--space-2);
+  padding: 2px var(--space-4);
+}
+
+.avatarSlot {
+  align-self: flex-start;
 }
 
 .bubble {

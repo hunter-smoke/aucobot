@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { joinWaitlist } from "@/lib/api/waitlist";
 
-import styles from "./MarketingLanding.module.css";
+import styles from "./LandingPage.module.css";
 
 type Status = "idle" | "submitting" | "success" | "error";
 

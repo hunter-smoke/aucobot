@@ -1,4 +1,4 @@
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 const FOOTER_LINKS = [
   { label: "Tính năng", href: "#tinh-nang" },

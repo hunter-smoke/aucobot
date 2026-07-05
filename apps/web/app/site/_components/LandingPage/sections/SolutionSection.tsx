@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ArrowDownIcon } from "@heroicons/react/24/solid";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 const AGENTS = [
   { Icon: PencilSquareIcon, name: "Content AI" },

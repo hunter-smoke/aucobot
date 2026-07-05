@@ -1,19 +1,31 @@
-/* Khung chat — nền wallpaper, header + composer nổi overlay */
+/* Khung chat — nền full, nội dung giới hạn cột giữa kiểu Telegram Web */
 .area {
   --float-inset: var(--space-3);
   --float-header: 48px;
   --float-composer: 52px;
 
-  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-chat));
+  background: var(--chat-wallpaper);
+  background-attachment: fixed;
+  display: flex;
   height: 100%;
+  justify-content: center;
   min-height: 0;
   overflow: hidden;
+  width: 100%;
+}
+
+/* Cột chat — header, tin nhắn, composer không tràn full màn hình rộng */
+.track {
+  height: 100%;
+  max-width: var(--chat-track-max-width);
+  min-height: 0;
   position: relative;
   width: 100%;
 }
 
 /* Tin nhắn cuộn phía sau, chừa chỗ cho 2 thanh nổi */
 .messagesLayer {
+  background: transparent;
   bottom: 0;
   display: flex;
   flex-direction: column;

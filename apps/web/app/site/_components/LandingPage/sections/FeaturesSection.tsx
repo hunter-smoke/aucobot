@@ -1,6 +1,6 @@
 import { FEATURES } from "../data/content";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 export function FeaturesSection() {
   return (

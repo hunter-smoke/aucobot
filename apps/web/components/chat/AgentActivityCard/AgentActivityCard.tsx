@@ -11,12 +11,17 @@ import {
 } from "@heroicons/react/20/solid";
 import type { ComponentType, SVGProps } from "react";
 
+import { Avatar } from "@/components/ui/Avatar/Avatar";
 import type { AgentActionKind, AgentActivity } from "@/types/chat";
+
+import bubbleStyles from "../MessageBubble/MessageBubble.module.css";
 
 import styles from "./AgentActivityCard.module.css";
 
 export interface AgentActivityCardProps {
   activities: AgentActivity[];
+  /** Tên agent — hiện avatar cạnh timeline. */
+  agentName?: string;
 }
 
 const KIND_ICON: Record<
@@ -45,7 +50,10 @@ function headerState(activities: AgentActivity[]): {
   return { label: "Đã hoàn thành", state: "done" };
 }
 
-export function AgentActivityCard({ activities }: AgentActivityCardProps) {
+export function AgentActivityCard({
+  activities,
+  agentName = "Trợ Lý",
+}: AgentActivityCardProps) {
   if (activities.length === 0) return null;
 
   const { label, state } = headerState(activities);
@@ -53,6 +61,10 @@ export function AgentActivityCard({ activities }: AgentActivityCardProps) {
 
   return (
     <div className={styles.row}>
+      <div className={`${bubbleStyles.avatarSlot} ${styles.avatarSlot}`}>
+        <Avatar name={agentName} seed={agentName} size="sm" />
+      </div>
+
       <div className={styles.card}>
         <div className={styles.header} data-state={state}>
           <span className={styles.headerDot} aria-hidden />

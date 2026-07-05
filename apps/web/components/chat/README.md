@@ -10,6 +10,9 @@ ChatArea/       ghép ChatHeader + MessageList + Composer (nhận conversation +
 ├── MessageList/    cuộn, nhóm theo ngày (DateDivider), gộp cụm cùng người, auto-scroll, empty
 │   ├── DateDivider/    "Hôm nay" · "Hôm qua" · "24/06/2026"
 │   ├── MessageBubble/  user (phải) · agent (trái) · system (giữa); agent dùng ChatMarkdown
+│   ├── MessageActionBlock/  agent + InlineActionBar (Duyệt · Từ chối · Sửa…)
+│   ├── ChatInlineButton/    nút inline dưới bubble — style/hover thống nhất
+│   ├── InlineActionBar/     nhóm nút xếp dọc full-width
 │   ├── TypingIndicator/    agent đang nghĩ — 3 chấm nhảy
 │   └── AgentActivityCard/  agent đang làm việc — timeline nhiều bước, icon theo loại
 │                           (web_search/read_document/write_content/build_workflow/
@@ -31,4 +34,4 @@ Trạng thái agent hiện cuối thread qua prop `agentState` của `MessageLis
 
 ## Chưa làm (💡 phase sau)
 
-Streaming/typing indicator, scroll-to-bottom button, tool activity, approval inline, job status, composer nâng cao (slash menu, đính kèm, chọn model).
+Streaming/typing indicator, scroll-to-bottom button, hook `useApprovalAction` + API, job status, composer nâng cao (slash menu, đính kèm, chọn model).

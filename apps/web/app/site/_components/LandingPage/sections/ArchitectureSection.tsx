@@ -1,7 +1,7 @@
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import { Fragment } from "react";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 const NODES = [
   "User",

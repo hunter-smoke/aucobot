@@ -1,5 +1,5 @@
 import { COMMUNITY_LINKS } from "../data/content";
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 import { WaitlistForm } from "../WaitlistForm";
 
 

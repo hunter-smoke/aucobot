@@ -5,6 +5,10 @@
   padding: 1px var(--space-4);
 }
 
+.row[data-side="in"] {
+  align-items: flex-start;
+}
+
 .row[data-side="out"] {
   justify-content: flex-end;
 }
@@ -13,6 +17,10 @@
   align-self: flex-end;
   flex-shrink: 0;
   width: 38px;
+}
+
+.row[data-side="in"] .avatarSlot {
+  align-self: flex-start;
 }
 
 .bubble {
@@ -80,9 +88,9 @@
 }
 
 .systemText {
-  background: var(--color-secondary-hover);
+  background: var(--color-chat-chip-bg);
   border-radius: var(--radius-full);
-  color: var(--color-description);
+  color: var(--color-chat-chip-text);
   font-size: var(--font-xs);
   padding: var(--space-1) var(--space-3);
 }

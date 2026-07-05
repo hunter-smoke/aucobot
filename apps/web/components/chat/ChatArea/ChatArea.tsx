@@ -37,31 +37,33 @@ export function ChatArea({
 }: ChatAreaProps) {
   return (
     <div className={styles.area}>
-      {/* Lớp tin nhắn — cuộn full màn, nằm dưới header/composer */}
-      <div className={styles.messagesLayer}>
-        <MessageList
-          messages={messages}
-          showNames={conversation.type === "room"}
-          agentState={agentState}
-        />
-      </div>
+      <div className={styles.track}>
+        {/* Lớp tin nhắn — cuộn trong cột giữa, nằm dưới header/composer */}
+        <div className={styles.messagesLayer}>
+          <MessageList
+            messages={messages}
+            showNames={conversation.type === "room"}
+            agentState={agentState}
+          />
+        </div>
 
-      {/* Header nổi */}
-      <div className={styles.headerFloat}>
-        <ChatHeader
-          conversation={conversation}
-          onOpenInfo={onOpenInfo}
-          onSearch={onSearch}
-          onRename={onRename}
-          onArchive={onArchive}
-          onDelete={onDelete}
-          onBack={onBack}
-        />
-      </div>
+        {/* Header nổi */}
+        <div className={styles.headerFloat}>
+          <ChatHeader
+            conversation={conversation}
+            onOpenInfo={onOpenInfo}
+            onSearch={onSearch}
+            onRename={onRename}
+            onArchive={onArchive}
+            onDelete={onDelete}
+            onBack={onBack}
+          />
+        </div>
 
-      {/* Composer nổi */}
-      <div className={styles.composerFloat}>
-        <Composer onSend={onSend} />
+        {/* Composer nổi */}
+        <div className={styles.composerFloat}>
+          <Composer onSend={onSend} />
+        </div>
       </div>
     </div>
   );

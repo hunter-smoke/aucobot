@@ -62,4 +62,27 @@ export interface Message {
   senderName: string;
   content: string;
   createdAt: string;
+  /** Tin agent kèm yêu cầu duyệt + nút inline (Telegram-style). */
+  approval?: MessageApproval;
+}
+
+/** Trạng thái duyệt gắn với một tin agent. */
+export type ApprovalStatus = "pending" | "approved" | "rejected" | "expired";
+
+export type InlineActionVariant = "primary" | "default" | "danger";
+
+/** Nút hành động dưới bubble — Duyệt / Từ chối / Sửa. */
+export interface InlineAction {
+  id: string;
+  label: string;
+  variant?: InlineActionVariant;
+}
+
+export interface MessageApproval {
+  requestId: string;
+  status: ApprovalStatus;
+  /** Nút khi `pending`; mặc định Duyệt · Từ chối · Sửa */
+  actions?: InlineAction[];
+  /** Nhãn sau khi đã xử lý (vd. "Đã duyệt"). */
+  resolvedLabel?: string;
 }

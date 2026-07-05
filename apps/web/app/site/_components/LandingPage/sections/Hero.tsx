@@ -5,7 +5,7 @@ import {
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 import { WaitlistForm } from "../WaitlistForm";
 
 
@@ -60,13 +60,12 @@ export function Hero() {
             Để lại email — nhận thông báo khi MVP mở, và là người trải nghiệm đầu tiên.
           </p>
           <div className={styles.heroActionsRow}>
-            <a className={styles.btnGhost} href="#san-pham">
+            <a className={styles.btnGhost} href="#live-demo">
               Xem cách hoạt động ↓
             </a>
-            <span className={styles.btnDisabled}>
+            <a className={styles.btnGhost} href="#live-demo">
               Xem demo
-              <span className={styles.soonTag}>Sắp có</span>
-            </span>
+            </a>
           </div>
         </div>
       </div>

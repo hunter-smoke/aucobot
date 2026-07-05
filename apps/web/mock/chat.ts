@@ -172,4 +172,17 @@ export const mockThreadMessages: Message[] = [
       "Đã thêm 2 caption + hashtag:\n\n4. Xuân về, rộn ràng tiếng cười `#Tet2026`\n5. Trao lộc đầu năm, đón vạn điều may `#TetSumVay`\n\nXem hướng dẫn đăng lịch ở [đây](/app).",
     createdAt: minutes(2),
   },
+  {
+    id: "t7",
+    conversationId: "conv-tiktok",
+    senderType: "agent",
+    senderName: "Trợ Lý",
+    content:
+      "Caption đăng Facebook:\n\n**Tết sum vầy bắt đầu từ món ngon…** 🧧\n\nLên lịch **09:00 ngày 28/1** sau khi bạn duyệt.",
+    createdAt: minutes(1),
+    approval: {
+      requestId: "req-2841",
+      status: "pending",
+    },
+  },
 ];

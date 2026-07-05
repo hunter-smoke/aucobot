@@ -38,12 +38,23 @@
   --color-bubble-in: var(--color-surface);
   --color-bubble-in-text: var(--color-text);
   --color-composer: var(--color-surface);
+  --chat-wallpaper: linear-gradient(
+    135deg,
+    #8eb7d8 0%,
+    #9bc9a8 30%,
+    #a7d49b 52%,
+    #d4e4a8 78%,
+    #e8efa7 100%
+  );
+  --color-chat-chip-bg: rgba(15, 23, 42, 0.32);
+  --color-chat-chip-text: #ffffff;
 
   /* ── Layout ─────────────────────────────────────────────────────────────── */
   --rail-width: 4.5rem;
   --sidebar-main-width: 18rem;
   --sidebar-width: calc(var(--rail-width) + var(--sidebar-main-width));
   --meta-panel-width: 21rem;
+  --chat-track-max-width: 45rem;
   --header-height: 3.5rem;
   --composer-min-height: 3.25rem;
 
@@ -112,9 +123,12 @@
   --color-success-dim: rgba(34, 197, 94, 0.12);
 
   --color-panel: #111827;
-  --color-chat: var(--color-background);
+  --color-chat: #323232;
   --color-bubble-in: #1c2433;
   --color-composer: var(--color-surface);
+  --chat-wallpaper: #323232;
+  --color-chat-chip-bg: rgba(0, 0, 0, 0.38);
+  --color-chat-chip-text: #ffffff;
 
   color-scheme: dark;
 }

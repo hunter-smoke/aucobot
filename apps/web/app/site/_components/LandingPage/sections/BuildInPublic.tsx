@@ -10,7 +10,7 @@ import {
   type ItemStatus,
 } from "../data/roadmap";
 
-import styles from "../MarketingLanding.module.css";
+import styles from "../LandingPage.module.css";
 
 const STATUS_ICON: Record<ItemStatus, typeof CheckCircleIcon> = {
   done: CheckCircleIcon,

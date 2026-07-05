@@ -10,9 +10,9 @@ export interface MessageBubbleProps {
   message: Message;
   /** Hiện tên người gửi (agent) — dùng trong phòng nhiều thành viên. */
   showName?: boolean;
-  /** Tin đầu cụm cùng người gửi. */
+  /** Tin đầu cụm — hiện avatar (agent) + tên. */
   isGroupStart?: boolean;
-  /** Tin cuối cụm — hiện avatar + giờ. */
+  /** Tin cuối cụm — hiện giờ. */
   isGroupEnd?: boolean;
 }
 
@@ -39,7 +39,7 @@ export function MessageBubble({
     <div className={styles.row} data-side={side}>
       {!isUser ? (
         <div className={styles.avatarSlot}>
-          {isGroupEnd ? (
+          {isGroupStart ? (
             <Avatar name={senderName} seed={senderName} size="sm" />
           ) : null}
         </div>

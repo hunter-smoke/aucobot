@@ -14,6 +14,7 @@ function isStaticAsset(pathname: string): boolean {
   return (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
+    pathname.startsWith("/chat-simulator") ||
     /\.(?:svg|png|jpg|jpeg|gif|webp|ico)$/.test(pathname)
   );
 }

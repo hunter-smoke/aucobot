@@ -125,7 +125,8 @@
 }
 
 .chat {
-  background: var(--color-chat);
+  background: var(--chat-wallpaper);
+  background-attachment: fixed;
   display: flex;
   flex: 1;
   flex-direction: column;
