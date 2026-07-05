@@ -13,7 +13,9 @@ export function SiteNav() {
   return (
     <header className={styles.nav}>
       <Link className={styles.logo} href="/">
-        <span aria-hidden className={styles.logoDot} />
+        <span aria-hidden className={styles.logoMark}>
+          A
+        </span>
         Aucobot
       </Link>
       <nav className={styles.navLinks} aria-label="Điều hướng">

@@ -23,6 +23,14 @@ body {
 }
 
 body {
+  background: linear-gradient(
+    135deg,
+    #e0f2fe 0%,
+    #ffffff 35%,
+    #e2e8f0 70%,
+    #bae6fd 100%
+  );
+  color: #0f172a;
   font-family: "Inter", sans-serif;
   margin: 0;
   overflow: hidden;
@@ -31,11 +39,10 @@ body {
 
 /* Root layout */
 .simulator-root {
-  background: linear-gradient(135deg, #a4cbd6 0%, #d5e9bf 50%, #f6f0cf 100%);
+  background: transparent;
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 36rem;
   overflow: hidden;
   padding: 0.5rem 1rem;
   position: relative;

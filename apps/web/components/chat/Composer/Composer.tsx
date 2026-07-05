@@ -21,7 +21,7 @@ export interface ComposerProps {
   disabled?: boolean;
 }
 
-const MAX_ROWS_PX = 200;
+const MAX_ROWS_PX = 400;
 const iconProps = { className: styles.sideIcon, strokeWidth: 2 as const };
 
 export function Composer({
@@ -39,8 +39,30 @@ export function Composer({
   useLayoutEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, MAX_ROWS_PX)}px`;
+
+    function adjustHeight() {
+      if (!el) return;
+      el.style.height = "auto";
+      const targetHeight = Math.min(el.scrollHeight, MAX_ROWS_PX);
+      el.style.height = `${targetHeight}px`;
+
+      if (el.scrollHeight <= MAX_ROWS_PX) {
+        el.style.overflowY = "hidden";
+      } else {
+        el.style.overflowY = "auto";
+      }
+    }
+
+    adjustHeight();
+
+    const resizeObserver = new ResizeObserver(() => {
+      adjustHeight();
+    });
+    resizeObserver.observe(el);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [value]);
 
   const hasText = value.trim().length > 0;

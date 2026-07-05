@@ -6,7 +6,7 @@
 .pill {
   align-items: flex-end;
   background: var(--color-composer);
-  border-radius: var(--radius-full);
+  border-radius: 24px;
   box-shadow: var(--shadow-md);
   display: flex;
   gap: 2px;
@@ -56,11 +56,17 @@
   font-size: var(--font-md);
   line-height: 1.35;
   margin-bottom: 9px;
-  max-height: 200px;
+  max-height: 400px;
   min-height: 22px;
   outline: none;
   padding: 0 var(--space-1);
   resize: none;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.input::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 .input::placeholder {

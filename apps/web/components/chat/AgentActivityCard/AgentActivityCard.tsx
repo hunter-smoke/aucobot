@@ -1,15 +1,15 @@
 import {
-  ArrowRightCircleIcon,
-  BoltIcon,
-  ClockIcon,
-  Cog6ToothIcon,
-  DocumentTextIcon,
-  MagnifyingGlassIcon,
-  PaperAirplaneIcon,
-  PencilSquareIcon,
-  SparklesIcon,
-} from "@heroicons/react/20/solid";
-import type { ComponentType, SVGProps } from "react";
+  ArrowRightCircle,
+  Clock,
+  FileText,
+  Pencil,
+  Search,
+  Settings,
+  Sparkles,
+  Send,
+  Zap,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import type { AgentActionKind, AgentActivity } from "@/types/chat";
@@ -24,19 +24,16 @@ export interface AgentActivityCardProps {
   agentName?: string;
 }
 
-const KIND_ICON: Record<
-  AgentActionKind,
-  ComponentType<SVGProps<SVGSVGElement>>
-> = {
-  thinking: SparklesIcon,
-  web_search: MagnifyingGlassIcon,
-  read_document: DocumentTextIcon,
-  write_content: PencilSquareIcon,
-  build_workflow: Cog6ToothIcon,
-  schedule: ClockIcon,
-  publish: PaperAirplaneIcon,
-  handoff: ArrowRightCircleIcon,
-  generic: BoltIcon,
+const KIND_ICON: Record<AgentActionKind, LucideIcon> = {
+  thinking: Sparkles,
+  web_search: Search,
+  read_document: FileText,
+  write_content: Pencil,
+  build_workflow: Settings,
+  schedule: Clock,
+  publish: Send,
+  handoff: ArrowRightCircle,
+  generic: Zap,
 };
 
 function headerState(activities: AgentActivity[]): {

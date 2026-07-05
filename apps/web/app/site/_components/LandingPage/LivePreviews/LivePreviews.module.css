@@ -1,10 +1,10 @@
-/* ═══ Section ═══ */
+/* ═══ Section — glass on gradient bg ═══ */
 .root {
   padding: var(--space-12) 0;
 }
 
 .eyebrow {
-  color: var(--accent);
+  color: #0284c7;
   font-size: var(--font-sm);
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -12,6 +12,7 @@
 }
 
 .title {
+  color: #0f172a;
   font-size: clamp(1.5rem, 3.5vw, 2.1rem);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -19,7 +20,7 @@
 }
 
 .lead {
-  color: var(--muted);
+  color: #64748b;
   font-size: var(--font-lg);
   line-height: 1.65;
   margin-top: var(--space-3);
@@ -32,10 +33,44 @@
 
 .iframe {
   aspect-ratio: 4 / 3;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 1rem;
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   display: block;
-  max-width: 100%;
+  margin-inline: auto;
+  max-width: 48rem;
+  width: 100%;
+}
+
+.heroWrap {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-lg, 1rem);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  width: 100%;
+}
+
+.frameWrapEmbedded {
+  margin-top: 0;
+}
+
+.iframeEmbedded {
+  aspect-ratio: 4 / 3;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: block;
+  max-width: none;
   width: 100%;
 }
