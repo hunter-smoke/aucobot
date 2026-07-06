@@ -57,22 +57,13 @@
 .logo-icon {
   width: 2rem;
   height: 2rem;
-  background: #0ea5e9;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2);
+  display: block;
 }
 
 @media (max-width: 640px) {
   .logo-icon {
     width: 1.75rem;
     height: 1.75rem;
-    font-size: 1.1rem;
   }
 }
 

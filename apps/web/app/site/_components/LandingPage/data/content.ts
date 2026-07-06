@@ -24,6 +24,10 @@ export const FEATURES: FeatureCard[] = [
     title: "AI nhớ thương hiệu của bạn",
     body: "Tone giọng, quy tắc, ngành hàng — ghi nhớ lâu dài, không lặp lại mỗi lần.",
   },
+  {
+    title: "Tự tạo agent của riêng bạn",
+    body: "Thiết kế các Agent chuyên trách bằng cách tùy chỉnh hướng dẫn, giọng điệu và giao việc cụ thể phù hợp với chiến dịch của bạn.",
+  },
 ];
 
 export interface FaqItem {

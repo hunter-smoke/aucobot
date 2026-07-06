@@ -1,3 +1,4 @@
+import Image from "next/image";
 import "./Footer.css";
 
 export function Footer() {
@@ -7,7 +8,13 @@ export function Footer() {
         <div className="footer-top">
           <div className="footer-logo-desc">
             <a href="#" className="logo">
-              <div className="logo-icon">A</div>
+              <Image
+                src="/aucobot-icon.svg"
+                alt="Aucobot Logo"
+                width={32}
+                height={32}
+                className="logo-icon"
+              />
               <span>Aucobot</span>
             </a>
             <p>

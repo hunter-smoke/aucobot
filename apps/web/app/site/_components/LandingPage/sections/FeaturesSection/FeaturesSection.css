@@ -65,10 +65,18 @@
   font-size: 1.35rem;
   transition: var(--transition-smooth);
 }
+.feature-icon-wrapper svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}
 .feature-card:hover .feature-icon-wrapper {
   background: var(--color-primary);
   color: #fff;
   box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+}
+.feature-card:hover .feature-icon-wrapper svg {
+  transform: scale(1.1);
 }
 
 .feature-title {

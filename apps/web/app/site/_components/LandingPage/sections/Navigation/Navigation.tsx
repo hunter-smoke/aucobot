@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import "./Navigation.css";
 
 export function Navigation() {
@@ -18,7 +19,13 @@ export function Navigation() {
     <header className={`navbar glass-nav ${scrolled ? "scrolled" : ""}`}>
       <div className="nav-container">
         <a href="#" className="logo">
-          <div className="logo-icon">A</div>
+          <Image
+            src="/aucobot-icon.svg"
+            alt="Aucobot Logo"
+            width={32}
+            height={32}
+            className="logo-icon"
+          />
           <span>Aucobot</span>
         </a>
         <ul className={`nav-menu ${mobileMenuOpen ? "active" : ""}`}>
