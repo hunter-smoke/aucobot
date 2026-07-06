@@ -4,6 +4,9 @@ import { FEATURE_IDS } from "../features/feature.constants";
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace"])
+    .default("info"),
   DATABASE_URL: z.string().min(1),
   API_PORT: z.coerce.number().int().positive().default(8387),
   WEB_ORIGIN: z.string().url().default("http://app.localhost:8386"),

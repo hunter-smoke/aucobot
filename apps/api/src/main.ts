@@ -3,6 +3,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
+import { Logger } from "nestjs-pino";
 import { ZodValidationPipe } from "nestjs-zod";
 
 import { API_DEFAULT_PORT, WEB_DEFAULT_PORT } from "@aucobot/shared";
@@ -18,8 +19,8 @@ async function bootstrap() {
     bufferLogs: true,
   });
 
+  app.useLogger(app.get(Logger));
   const loggingService = app.get(LoggingService);
-  app.useLogger(loggingService);
 
   app.use(cookieParser());
   app.set("trust proxy", 1);

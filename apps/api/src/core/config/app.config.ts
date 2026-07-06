@@ -3,6 +3,7 @@ import { envSchema, type EnvConfig } from "./env.schema";
 function readEnv(): EnvConfig {
   return envSchema.parse({
     NODE_ENV: process.env.NODE_ENV,
+    LOG_LEVEL: process.env.LOG_LEVEL,
     DATABASE_URL: process.env.DATABASE_URL,
     API_PORT: process.env.API_PORT ?? process.env.PORT,
     WEB_ORIGIN: process.env.WEB_ORIGIN,
@@ -36,6 +37,7 @@ export const appConfig = () => {
 
   return {
     nodeEnv: env.NODE_ENV,
+    logLevel: env.LOG_LEVEL,
     databaseUrl: env.DATABASE_URL,
     apiPort: env.API_PORT,
     webOrigin: env.WEB_ORIGIN,

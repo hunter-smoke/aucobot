@@ -1,33 +1,54 @@
 import { Injectable, LoggerService } from "@nestjs/common";
+import { PinoLogger } from "nestjs-pino";
 
 @Injectable()
 export class LoggingService implements LoggerService {
-  private format(level: string, message: string, context?: string): string {
-    const prefix = context ? `[${context}] ` : "";
-    return `${prefix}${message}`;
+  constructor(private readonly logger: PinoLogger) {}
+
+  log(message: string, context?: string, meta?: Record<string, unknown>): void {
+    this.write("info", message, context, meta);
   }
 
-  log(message: string, context?: string): void {
-    // Do not use Nest Logger here — app.useLogger(this) would recurse infinitely.
-    console.log(`[LOG] ${this.format("", message, context)}`);
+  error(
+    message: string,
+    trace?: string,
+    context?: string,
+    meta?: Record<string, unknown>,
+  ): void {
+    this.write("error", message, context, { ...meta, ...(trace ? { trace } : {}) });
   }
 
-  error(message: string, trace?: string, context?: string): void {
-    console.error(`[ERROR] ${this.format("", message, context)}`);
-    if (trace) {
-      console.error(trace);
-    }
+  warn(message: string, context?: string, meta?: Record<string, unknown>): void {
+    this.write("warn", message, context, meta);
   }
 
-  warn(message: string, context?: string): void {
-    console.warn(`[WARN] ${this.format("", message, context)}`);
+  debug(message: string, context?: string, meta?: Record<string, unknown>): void {
+    this.write("debug", message, context, meta);
   }
 
-  debug(message: string, context?: string): void {
-    console.debug(`[DEBUG] ${this.format("", message, context)}`);
+  verbose(message: string, context?: string, meta?: Record<string, unknown>): void {
+    this.write("trace", message, context, meta);
   }
 
-  verbose(message: string, context?: string): void {
-    console.log(`[VERBOSE] ${this.format("", message, context)}`);
+  private write(
+    level: "info" | "warn" | "debug" | "trace" | "error",
+    message: string,
+    context?: string,
+    meta?: Record<string, unknown>,
+  ): void {
+    const bindings = this.bindings(context, meta);
+    this.logger[level](bindings, message);
+  }
+
+  private bindings(
+    context?: string,
+    extra?: Record<string, unknown>,
+  ): Record<string, unknown> | undefined {
+    const bindings = {
+      ...(context ? { context } : {}),
+      ...extra,
+    };
+
+    return Object.keys(bindings).length > 0 ? bindings : undefined;
   }
 }

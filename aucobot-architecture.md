@@ -117,13 +117,27 @@ Trong mỗi Room/Session, user có hai loại "trợ lý" bổ trợ nhau — **
 | | **Agent** 🧠 | **Bot** ⚙️ |
 |---|-------------|-----------|
 | Bản chất | AI reasoning — hiểu ngôn ngữ, tự quyết, gọi tool linh hoạt | Workflow **cố định** cho một việc cụ thể — **không suy nghĩ** |
-| Ai tạo | **User tạo** (setup wizard) để hỗ trợ công việc | **Agent xây hộ con người** (sinh code JS từ yêu cầu) |
+| Ai tạo | **User tạo** (setup wizard) — Mother đẻ | **Agent lắp ráp** từ **Block** hệ thống (glue); thiếu Block → JS inline user kiểm soát |
 | Cách chạy | LLM (Vercel AI SDK) + tool calling, kết quả không định trước | Thực thi **JavaScript đơn giản** — deterministic, input → output rõ ràng |
 | Chi phí / tốc độ | Tốn token, chậm hơn, "đắt" | Rẻ, nhanh, chạy lặp lại ổn định |
 | Ví dụ | "Viết 5 caption Tết theo brand kit rồi lên lịch" | "Mỗi 9h sáng lấy post nhiều like nhất tuần → gửi báo cáo" |
 | Ẩn dụ | Nhân viên biết nghĩ | Macro / dây chuyền tự động |
 
 Bot mới ở mức **ý tưởng**. Toàn bộ thiết kế "Agent xây Bot" được gom vào một khối mở rộng bên dưới để tránh nói lại nhiều lần.
+
+##### Thuật ngữ chốt — Block vs Bot (tránh chồng nghĩa)
+
+| Tên | Là gì | Ai tạo |
+|-----|-------|--------|
+| **Block** (khối Lego) | Đơn vị **1-việc dựng sẵn**: Cron, Scraper, LLM Transformer, Publisher… | **Hệ thống** — catalog cố định, đã vetted |
+| **Bot** | Nhiều **Block** ghép lại + glue → chạy được | **Agent lắp ráp** khi user cần (không qua Mother) |
+
+- **Mother chỉ đẻ Agent** (tuyển người). Bot **không** đi qua Mother — agent tự nhặt/ghép Block khi cần → **không có bước "xin bot"**.
+- **Hai chế độ dùng Block/Bot:**
+  - **A — chạy ngay, một lần** (agent đang làm việc nhặt Block chạy luôn): **zero ceremony**, như gọi tool.
+  - **B — Automation đứng nền** (chạy lặp / theo lịch / sự kiện, không ai ngồi xem): user **luôn biết nó tồn tại** và có thể **bật · tắt · sửa · xóa** trong danh sách Automations. Không wizard nặng — chỉ hiển thị + điều khiển.
+- **Thiếu Block phù hợp:** agent được phép **tự sinh JS inline** cho việc đó, nhưng **user vẫn kiểm soát** (thấy được, duyệt/tắt) + đánh dấu **tín hiệu roadmap** để platform bổ sung Block chính danh. Không để agent tự chế Block mới vào catalog vetted.
+- **Side-effect ra ngoài** (đăng bài…) vẫn qua **Approval queue nội dung** — duyệt *kết quả*, không duyệt *bot*.
 
 #### Bot Workflow — thiết kế mở rộng (💡 tham khảo khi scale)
 
@@ -205,9 +219,10 @@ Model dữ liệu (💡) — cũng liệt kê ở [Schema DB](#schema-db--ý-tư
 
 | Model | Vai trò |
 |-------|---------|
-| `Bot` | Định danh + con trỏ tới version đang active + owner/tier |
-| `BotTemplate` | Khung workflow hướng dẫn Agent sinh code (trigger/steps/tools/guardrails) |
-| `BotVersion` | Artifact **bất biến**: graph node + glue JS + I/O schema; rollback = đổi con trỏ |
+| `Block` | Khối Lego **hệ thống** (vetted) — Cron, Scraper, LLM Transformer, Publisher… catalog cố định |
+| `Bot` | Định danh automation (Block ghép + glue) + con trỏ version active + owner/tier; user **bật/tắt/sửa/xóa** |
+| `BotTemplate` | Khung workflow hướng dẫn Agent nối Block + sinh glue (trigger/steps/tools/guardrails) |
+| `BotVersion` | Artifact **bất biến**: graph Block + glue JS + I/O schema; rollback = đổi con trỏ |
 | `WorkflowRun` | Mỗi lần chạy — trạng thái tổng |
 | `WorkflowStep` | Output từng node — truyền N→N+1 + resume |
 
@@ -219,54 +234,113 @@ Model dữ liệu (💡) — cũng liệt kê ở [Schema DB](#schema-db--ý-tư
 - **Self-healing:** output lệch schema → Agent **re-generate glue** từ artifact cũ + sample data mới → `BotVersion` mới → dry-run + user duyệt → active.
 - **Bán tự động:** hệ thống phát hiện + đề xuất; **user duyệt version mới** trước khi chạy (giữ human-in-the-loop, không full-auto).
 
-**Thư viện Bot định sẵn — 4 nhóm Lego (💡):** mỗi bot là một "khối" single-responsibility; Agent đóng vai người lắp ráp, chỉ sinh glue nối đầu ra khối này vào đầu vào khối kia.
+**Thư viện Block định sẵn — 4 nhóm Lego (💡):** mỗi **Block** là một khối single-responsibility do **hệ thống** cung cấp (vetted); Agent đóng vai người lắp ráp, chỉ sinh glue nối đầu ra Block này vào đầu vào Block kia. Kết quả lắp ráp = một **Bot**.
 
-| Nhóm | Bot ví dụ | Vai trò |
-|------|-----------|---------|
-| **Trigger** | Cron/Schedule · Webhook Listener · Database Event | Khởi tạo luồng (hiện thực của trigger enum) — không nhận input từ bot khác |
+| Nhóm | Block ví dụ | Vai trò |
+|------|-------------|---------|
+| **Trigger** | Cron/Schedule · Webhook Listener · Database Event | Khởi tạo luồng (hiện thực của trigger enum) — không nhận input từ Block khác |
 | **Extraction** | API Fetcher · Web Scraper · Social Monitor | Thu thập dữ liệu thô |
 | **Processing** | Data Mapper (glue) · LLM Transformer · Media Processor · Affiliate Link Generator | "Chế biến" — nơi Agent sinh glue nhiều nhất |
 | **Action** | Social Publisher · Database Sync · Notification | Thực thi cuối ra thế giới ngoài |
 
-Ví dụ lắp ráp: *"Mỗi sáng lấy video top 1 từ X, LLM viết lại caption gắn link affiliate, tự lên lịch đăng"* → `Cron → Web Scraper → Data Mapper (Agent sinh glue tách link/tiêu đề) → LLM Transformer → Affiliate Link Generator → Social Publisher`.
+Ví dụ lắp ráp một **Bot**: *"Mỗi sáng lấy video top 1 từ X, LLM viết lại caption gắn link affiliate, tự lên lịch đăng"* → `Cron → Web Scraper → Data Mapper (Agent sinh glue tách link/tiêu đề) → LLM Transformer → Affiliate Link Generator → Social Publisher`.
+
+> **Thiếu Block:** nếu chuỗi cần một khối chưa có trong catalog, agent **sinh JS inline** cho bước đó (user kiểm soát được: xem/duyệt/tắt) + ghi **tín hiệu roadmap**. Không tự thêm Block vào catalog vetted.
 
 ### Luồng tương tác trong Room — ai trả lời? (💡 ý tưởng)
 
-> 💡 tương lai (Room nhiều user = Vòng 2). Giải bài toán "nhiều user + nhiều agent trong một phòng thì ai trả lời, có bị nghẽn không".
+> 💡 tương lai (Room nhiều user / nhiều agent = Vòng 2). Giải bài toán "nhiều agent trong một phòng thì ai trả lời, ai làm việc gì, có bị nghẽn không". Sáu quyết định dưới đây đã chốt hướng (chưa code MVP).
 
-**Nguyên tắc gốc — user chỉ tương tác với Agent:** User giao việc bằng cách **tag một Agent**; Agent reasoning rồi **gọi workflow/Bot/tool** để làm. **User không gọi Bot trực tiếp** — Bot/workflow chỉ là *công cụ* của Agent, không phải người tham gia chat.
+**Nguyên tắc gốc — user chỉ tương tác với Agent:** User giao việc bằng cách **tag một Agent**; Agent reasoning rồi **gọi tool/Bot** để làm. **User không gọi Bot trực tiếp** — Bot/workflow chỉ là *công cụ* của Agent, không phải người tham gia chat.
 
 ```text
-User → tag @agent → Agent reasoning → gọi workflow/tool để làm
+User → tag @agent → Agent reasoning → gọi tool để làm
                                      → stream "đã nhận → đang làm → đã xong" về Room
 ```
 
-**Ai trả lời khi user nhắn** (mention-only + cửa vào, tách theo loại hội thoại):
+#### 1 — Topology: hình sao (star), KHÔNG mesh — agent không gọi agent
 
-| Loại hội thoại | Không tag | Có tag |
+Mọi phối hợp đi qua **orchestrator `@Trợ Lý`**. Agent **không biết agent khác tồn tại**, **không** có `handoff_to_agent`. Việc tuần tự (B cần output của A) do orchestrator làm trung gian:
+
+```text
+User → @Trợ Lý "làm X cần A rồi B"
+        ├─ gọi Agent A → thu kết quả
+        ├─ đưa kết quả A cho Agent B → thu kết quả
+        └─ tổng hợp → trả user
+```
+
+**Vì sao bỏ tầng trung gian (kiểu phó GĐ / trưởng phòng):** con người cần middle-manager vì **span of control** (1 người quản nổi ~7). Orchestrator AI **không có giới hạn đó** — đọc mô tả 20 agent + dispatch song song trong một lượt. Nên flat + 1 orchestrator là đúng; bê nguyên hierarchy của người vào AI là mô phỏng sai ràng buộc. Bỏ mesh cũng tránh **vòng lặp vô tận** + **token nổ** + **khó debug**.
+
+#### 2 — Orchestrator là "cửa mặc định", KHÔNG phải "cửa duy nhất"
+
+Ép mọi request qua orchestrator = gấp đôi độ trễ + token (orchestrator reasoning rồi mới tới agent thật) và biến orchestrator thành **nút thắt cổ chai**. Giữ nhiều đường vào:
+
+| User làm | Hành vi |
+|---|---|
+| `@Trợ Lý làm X` | Orchestrator phân rã + dispatch (**mặc định**, khi lười / phó mặc) |
+| `@Mai viết caption` | Gọi **thẳng** Mai, bỏ qua orchestrator (khi biết rõ ai) |
+| Reply vào tin của agent | Tiếp tục ngữ cảnh với agent đó, khỏi tag lại |
+| Không tag (Room) | **Không ai trả lời** — tránh nhiễu + tốn token |
+
+- **Session (chat 1-1):** **không có orchestrator** — thừa. Trợ lý mặc định trả lời mọi tin.
+- **Auto-provision:** mỗi Room tự có sẵn `@Trợ Lý` — user không cấu hình gì.
+
+#### 3 — Định tuyến 2 lớp: LỌC cứng + CHỌN mềm
+
+Orchestrator route dựa **capability manifest** của từng agent, không đoán mò:
+
+| Tín hiệu | Dùng để | Kiểu |
 |---|---|---|
-| **Session** (1 việc, 1 trợ lý) | Trợ lý mặc định **vẫn trả lời** (như chat 1-1) | (thường không cần) |
-| **Room** (nhiều người + agent) | **Không ai trả lời** (người nói chuyện với nhau, tránh nhiễu + tốn token) | Chỉ agent được tag |
+| `skillGroups` | **LỌC cứng** — ai *làm được* (có tool cần thiết) | Máy đọc, chuẩn hóa |
+| `role` (preset hoặc custom) | **Hiển thị** + gợi ý cho user | Người đọc |
+| `description` (+ "không làm gì") | **CHỌN mềm** — ai *hợp nhất* | Orchestrator reasoning |
 
-- **Cửa vào `@orchestrator`:** trong Room, tag orchestrator để nó nhận yêu cầu + tự điều phối giao việc → user chỉ cần nhớ **một tên** thay vì nhớ hết specialist.
-- **Reply-to:** trả lời vào tin của agent nào → tiếp tục ngữ cảnh với agent đó, khỏi tag lại.
+```text
+Lớp 1 — LỌC (cứng): agent nào CÓ skillGroups cần thiết?      → chắc chắn, không đoán
+Lớp 2 — CHỌN (mềm): trong nhóm lọc được, ai HỢP nhất?         → đọc role + description
+        ≥2 agent ngang nhau → giao đại (round-robin)          → KHÔNG hỏi user
+```
 
-**Tag nhiều agent cùng lúc — user tự chọn hành vi bằng cách tag khác nhau:**
+- **Không** route bằng *tên* role tự đặt (custom → "Content" vs "Copywriter" vs "Viết bài" sẽ loạn). Tên role để **user nhìn**; máy route bằng `skillGroups` + `description`.
+- **"Làm được" ≠ "hợp nhất":** hai agent cùng có tool `facebook` (Publisher vs Analyst) — lọc cứng qua cả hai, chọn mềm bằng role/description để giao đúng người.
+- **Negative scope** (`description` ghi rõ *KHÔNG làm gì*) giúp orchestrator loại nhanh, tránh route nhầm.
+- **💡 tinh chỉnh sau (defer):** cho user đặt **"agent chính" cho mỗi skill** trong room (VD đăng FB → mặc định Publisher); orchestrator ưu tiên agent chính, fallback khi bận/lỗi.
 
-| Bạn làm gì | Ai điều phối | Thứ tự | Agent thấy nhau? |
-|---|---|---|---|
-| **Tag thẳng nhiều agent** (`@a @b @c`) | Không ai — chạy **song song độc lập** (mỗi agent 1 lane) | Không định trước (xong trước hiện trước) | Không (bắt đầu cùng lúc) |
-| **Tag `@orchestrator`** | Orchestrator lập plan (DAG) | Có — song song/tuần tự theo phụ thuộc | Có (khi tuần tự, agent sau thấy output agent trước) |
+#### 4 — Không ai làm được → gợi ý actionable (vòng giữ chân)
 
-→ Cần **nhiều góc nhìn độc lập, nhanh** → tag thẳng; cần **quy trình có thứ tự / bước sau ăn kết quả bước trước** → tag orchestrator. Kèm **concurrency cap**: tag nhiều thì chạy tối đa N song song, phần còn lại xếp hàng (tránh burst token / rate limit).
+```text
+0 agent hợp   → báo user + gợi ý:  [Tạo agent Analyst]  hoặc  [Bật kỹ năng Google Sheets cho Mai]
+1 agent hợp   → giao luôn
+≥2 agent hợp  → giao đại (round-robin), KHÔNG hỏi user
+```
 
-**Setup orchestrator — gần như bằng 0:**
+Mỗi lần "không làm được" → gợi ý tạo agent / bật skill → user xây phòng đầy đủ hơn (đúng tinh thần *"Xây dựng phòng marketing ảo của riêng bạn"*).
 
-- **Auto-provision:** mỗi Room tự có sẵn một orchestrator mặc định — user **không phải cấu hình** gì, `@orchestrator` chạy ngay.
-- **Điều phối bằng reasoning, không phải bảng cấu hình:** orchestrator là một **Agent biết nghĩ**; nó đọc **role + mô tả** của các agent trong phòng (sinh từ setup wizard) rồi **tự quyết gọi ai / thứ tự nào theo từng yêu cầu** lúc chạy. User **không khai báo luật "X trước Y sau"** — chỉ cần mô tả rõ vai từng agent lúc tạo (việc vốn phải làm dù có orchestrator hay không).
-- **Không bắt buộc dùng:** phòng không cần orchestrator vẫn chạy (user tag thẳng); phòng chỉ 1 agent thì khỏi cần. Orchestrator chỉ là "đường tắt" khi không muốn nhớ tag ai.
+**Guardrail:** match phải dựa trên `skillGroups` **thật**, không đoán; ngưỡng tự tin thấp → **hỏi lại user** thay vì nhận bừa rồi route cho agent không đủ khả năng. Chỉ hỏi khi **không có ai hợp**, không hỏi khi **nhiều người hợp**.
 
-**Workflow được kích hoạt bằng gì** (đã bỏ `command` trực tiếp — user không /slash gọi Bot):
+#### 5 — preset vs role vs description (tránh 3 khái niệm đá nhau)
+
+| Field | Vai trò | Bền vững? |
+|---|---|---|
+| `preset` | **Hạt giống** wizard — chọn xong tự điền sẵn role + tone + gợi ý skillGroups | Chỉ lúc tạo |
+| `role` | **Chức danh** thật (routing display) — chọn từ list có sẵn **hoặc** tự đặt | Lưu bền |
+| `description` | Chi tiết tự do (ai / làm gì / không làm gì) — có **khung gợi ý** để tránh ô trống | Lưu bền |
+
+→ Preset chỉ là nút bấm cho nhanh lúc tạo; sau đó **role + description mới là dữ liệu thật** dùng để điều phối.
+
+#### 6 — Song song, sub-room, thợ tạm — ba thứ khác nhau (đừng gộp)
+
+| Nhu cầu | Giải pháp | Trạng thái |
+|---|---|---|
+| **Việc lớn cần xử lý song song** | Orchestrator **dispatch nhiều agent hiện có** cùng lúc (concurrency cap) | 🔜 MVP đủ dùng |
+| **Tổ chức khi room quá đông** (20+ agent) | **Sub-room** — room con có orchestrator riêng; hierarchy nổi lên qua **lồng room**, không qua agent→agent (giữ topology "fractal star") | 💡 seam, **defer xa** |
+| **Thợ tạm vô danh dùng-một-lần** (kiểu Cursor sub-agent) | **Bot / execution plane** (JS trong sandbox), không phải agent có hồn | 💡 seam, **defer xa** |
+
+> Song song (làm ngay) = dispatch nhiều **agent thật**, KHÔNG cần đẻ khái niệm mới. Sub-room chỉ để **tổ chức**, không phải để chạy song song. Thợ tạm vô danh map vào **Bot**, xem [Bot Workflow](#bot-workflow--thiết-kế-mở-rộng-tham-khảo-khi-scale).
+
+#### Trigger workflow & chống nghẽn
+
+**Workflow kích hoạt bằng gì** (không `command` /slash gọi Bot trực tiếp):
 
 | Trigger | Ai kích | User trong luồng? |
 |---|---|---|
@@ -276,7 +350,7 @@ User → tag @agent → Agent reasoning → gọi workflow/tool để làm
 
 **Chống nghẽn (concurrency):** mỗi yêu cầu = **1 run / task lane độc lập**, các run chạy **song song**; **serialize trong từng run** để 2 tin không đè context. Room chỉ là **khung nhìn chung** — mọi member thấy cùng stream qua WebSocket per-conversation. Việc nặng **tách khỏi luồng chat** (enqueue job / Bot Workflow) → chat không treo chờ.
 
-**Guardrails:** concurrency cap số LLM call song song (tránh burst token + rate limit); max handoff steps / turn budget để agent không trả lời qua lại vô tận.
+**Guardrails:** concurrency cap số LLM call song song (tránh burst token + rate limit); turn budget mỗi request. Vì đã bỏ agent→agent (star thuần), **không còn** rủi ro handoff vô tận.
 
 ### Model dữ liệu — **✅ Conversation** · 💡 phần còn lại
 
@@ -426,11 +500,13 @@ Endpoints **💡:** `POST /api/conversations` (room), `POST /api/conversations/:
 | `web_search` | Trend, competitor, tham khảo thị trường |
 | `update_agent_memory` | Ghi insight học được theo user/room |
 
-**Orchestration (agent ↔ agent):**
+**Orchestration (orchestrator → agent, star thuần):**
+
+> Topology **hình sao** — agent **không** gọi agent (bỏ `handoff_to_agent`). Điều phối do orchestrator `@Trợ Lý` làm trung gian. Xem [Luồng tương tác trong Room](#luồng-tương-tác-trong-room--ai-trả-lời-💡-ý-tưởng).
 
 | Tool | Mô tả |
 |------|--------|
-| `handoff_to_agent` | Content → Scheduler: truyền structured payload (Zod) |
+| `dispatch_to_agent` | Orchestrator giao việc cho 1 agent + thu kết quả (không phải agent tự gọi agent) |
 | `list_pending_approvals` | Orchestrator liệt kê bài chờ duyệt |
 
 ### Approval queue & job state machine — **💡 ý tưởng**
@@ -460,9 +536,10 @@ API **💡:** `GET /api/conversations/:id/approvals`, `POST /api/approvals/:id/a
 | `Conversation` | Room hoặc Session — **thay `Department`** |
 | `Message` | Tin nhắn trong hội thoại |
 | `Agent` | Agent AI (user tạo) — reasoning, tool calling |
-| `Bot` | Định danh workflow (Agent xây hộ) — con trỏ tới version active + owner/tier |
-| `BotTemplate` | Khung workflow hướng dẫn Agent sinh code (trigger `schedule`/`event`/`agent-invoked`) |
-| `BotVersion` | Artifact **bất biến** của Bot: graph node + glue JS + I/O schema; rollback = đổi con trỏ |
+| `Block` | Khối Lego hệ thống (vetted catalog) — đơn vị 1-việc để agent ghép |
+| `Bot` | Automation (Block ghép + glue) — con trỏ version active + owner/tier; user bật/tắt/sửa/xóa |
+| `BotTemplate` | Khung workflow hướng dẫn Agent nối Block (trigger `schedule`/`event`/`agent-invoked`) |
+| `BotVersion` | Artifact **bất biến** của Bot: graph Block + glue JS + I/O schema; rollback = đổi con trỏ |
 | `WorkflowRun` | Một lần chạy Bot — trạng thái tổng |
 | `WorkflowStep` | Output từng node — truyền N→N+1 + resume |
 | `BrandKit` | Tone, rules, industry template |
@@ -840,7 +917,7 @@ Core gồm **4 lớp**. Tắt bất kỳ feature nào, core vẫn chạy — app
 | `approvals` | Human-in-the-loop, approval queue API | core `events` |
 | `documents` | Upload, extract text, `read_document` tool | core `conversations` **💡** |
 | `web-search` | `web_search` tool (Tavily/Serper) | core `agents` |
-| `ai-orchestration` | Vercel AI SDK, agent chat, handoff | core `agents`, `llm-services` |
+| `ai-orchestration` | Vercel AI SDK, agent chat, orchestrator dispatch (star) | core `agents`, `llm-services` |
 
 Bật/tắt ví dụ:
 

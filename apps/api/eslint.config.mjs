@@ -228,12 +228,6 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/logging.service.ts"],
-    rules: {
-      "no-console": "off",
-    },
-  },
-  {
     files: ["**/*.spec.ts", "**/*.test.ts"],
     rules: {
       "no-console": "off",

@@ -49,7 +49,22 @@ pnpm --filter @aucobot/api build
 
 ## Cấu trúc service (`service/`)
 
-Mọi **domain service** (`@Injectable` business logic) đặt trong thư mục **`service/`** của module:
+Mọi **domain service** (`@Injectable` business logic) đặt trong thư mục **`service/`** của module. **Mỗi service một folder riêng** — không để `*.service.ts` ngang hàng controller hay ngang hàng nhau trong `service/`.
+
+### Một service
+
+```
+core/users/
+  users.controller.ts
+  users.module.ts
+  dto/
+  service/
+    users/
+      users.service.ts
+      users.service.test.ts
+```
+
+### Nhiều service (chuẩn: `core/auth/`)
 
 ```
 core/auth/
@@ -59,18 +74,26 @@ core/auth/
   guards/
   strategies/
   service/
-    auth.service.ts
-    auth.service.test.ts   # hoặc *.spec.ts
+    auth/
+      auth.service.ts
+      auth.service.test.ts
+    otp-rate-limit/
+      otp-rate-limit.service.ts
+      otp-rate-limit.service.test.ts
 ```
 
 | Quy tắc | Ghi chú |
 |---------|---------|
-| Tên file | `{domain}.service.ts` — không để `*.service.ts` ngang hàng controller |
-| Import | `from "./service/auth.service"` (trong module) |
-| Exception | `PrismaService`, `LoggingService` — infra, giữ `database/` / `logging/` |
-| Test | Cùng folder `service/` — `*.test.ts` hoặc `*.spec.ts`; mock Prisma/JWT, không hit DB thật |
+| Folder | `service/{tên-service}/` — kebab-case nếu tên ghép (vd `otp-rate-limit/`) |
+| Tên file | `{tên-service}.service.ts` trong folder con tương ứng |
+| Import (module) | `from "./service/auth/auth.service"` |
+| Import (service ↔ service) | `from "../otp-rate-limit/otp-rate-limit.service"` (cùng `service/`) |
+| Test **bắt buộc** | Mỗi `*.service.ts` **phải** có `*.service.test.ts` (hoặc `*.spec.ts`) **cùng folder** — mock Prisma/JWT/Redis, không hit DB thật |
+| Exception | `PrismaService`, `LoggingService`, `RedisService` — infra, giữ `database/` / `logging/` / `redis/` |
 
-Khi thêm module mới (vd `users/`): `users/service/users.service.ts`.
+**Cấm:** `conversations.service.ts` ngang hàng `conversations.controller.ts`; `service/auth.service.ts` không có folder con.
+
+Khi thêm module mới: `users/service/users/users.service.ts` + `users.service.test.ts`.
 
 ---
 
@@ -108,7 +131,7 @@ Luật mới: `warn` → `error` khi snapshot sạch.
 | `array-callback-return`, `no-promise-executor-return` | Return đúng trong callback |
 | `no-return-assign`, `no-self-assign`, `no-unreachable-loop` | Logic bug |
 | `no-unsafe-optional-chaining` | Không arithmetic trên `?.` |
-| **`no-console`** | Cấm `console.*` trong `src/` — dùng `LoggingService` / Nest `Logger` |
+| **`no-console`** | Cấm `console.*` trong `src/` — dùng `LoggingService` (Pino) |
 | `no-param-reassign` | Không mutate param (`acc` / `draft` whitelist nếu cần) |
 | `consistent-return`, `default-case`, `default-case-last` | Return / switch nhất quán |
 | `prefer-template` | Template literal |
